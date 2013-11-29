@@ -1,0 +1,990 @@
+#!/bin/bash
+# rmtrash - `rm' compatible layer for `trash'
+# Version 1.6 (build 20130807)
+#
+#
+# SHORT DESCRIPTION:
+#   Put files (and directories) in trash using the `trash' command in a way
+#   that is, otherwise as `trash' itself, compatible to GNUs `rm'.
+#
+#
+# DEPENDENCIES:
+#   - `trash' or `trash-put', provided by the package `trash-cli'
+#   - `dpkg', provided by the package `dpkg'
+#
+#   Note that there are many more dependencies. Nearly every distribution meets
+#   these dependencies by default, so they are not listed here. Please also
+#   note that this script uses options of POSIX commands, which are not part of
+#   the POSIX standard. The extended variants provided by GNU are recommended.
+#
+#   This script was tested with Ubuntu 10.04 LTS (Lucid Lynx) and
+#   Ubuntu 12.04 LTS (Precise Pangolin) only. It SHOULD work great with all
+#   Debian-based distributions.
+#
+#
+# EXIT CODES:
+#   An exit status of zero indicates success, and a nonzero value indicates
+#   that an error occured. The following exit codes are fatal, so rmtrash won't
+#   do anything. Note that an nonzero exit status is a bitmask.
+#
+#      1  unknown error
+#      2  invalid options
+#      4  requirements of this layer were not met
+#         (trash-put and/or rm was not found, is not installed or not
+#         executable)
+#
+#   The following exit codes are non-fatal, that means that rmtrash only aborted
+#   the corresponding argument. All other arguments, that means all arguments
+#   prior and posterior the failed argument, will be passed as like as nothing
+#   happened.
+#
+#      8  trash-put returned a nonzero exit status
+#     16  rm returned a nonzero exit status
+#     32  user interaction requiered in non-interactive mode
+#     64  cannot remove /
+#    128  cannot remove . or ..
+#    256  no such file or directory
+#    512  cannot remove directorys in non-recursive-mode
+#   1024  unable to create trashcan: permission denied
+#   2048  unable to trash the trashcan
+#
+#
+# KNOWN BUGS:
+#   If you use rmtrash as an bash alias, you maybe noticed, that the alias
+#   doesn't work when using sudo. You can catch up on that by adding
+#       alias sudo='sudo '
+#   to the bashrc. Note the space before the closing quote. The explanation
+#   is found in the alias section of the bash manpage:
+#       "A trailing space in  value causes the next word to be checked for alias
+#       substitution when the alias is expanded."
+#
+#
+# COPYRIGHT AND LICENSING:
+#   Copyright (C) 2011-2013  Daniel Rudolf <http://www.daniel-rudolf.de/>
+#
+#   This program is free software: you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation, version 3 of the License only.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#
+# CHANGELOG:
+#   v1.1 - 2011-09-10 22:28:02+0200
+#       - buggy flag --one-file-system fixed (lines 345-367 added)
+#       - find is now using flag -xdev instead of the depraced flag -mount when
+#         deleting on a single file system (flag --one-file-system set)
+#   v1.2 - 2011-09-11 19:12:46+0200
+#       - user is asked before descending into a write-protected directory in
+#         interactive modes "default" and "once"
+#       - user is more often informed about write-protected directories
+#   v1.3 - 2011-09-12 22:08:26+0200
+#       - code review to allow special characters (especially \n) in filenames.
+#         Thanks to ubuntuusers.de member Lasall!
+#       - special options --forbid-root and --forbid-root-force added
+#       - sorting disabled (not necessary, very slow and source of some problems)
+#       - some performance improvements
+#       - some code style improvements
+#   v1.4 - 2011-12-03 23:22:58+0100
+#       - dependencies added
+#       - known bugs added
+#       - much more better exit codes
+#       - new function getOptionsAsCmdString() to map the current option values
+#         back to their arguments
+#       - paths to rm and trash-put are now read from $PATH using which
+#       - check if trash-put is installed and executable
+#       - rmtrash now handles --force and --interactive as like as rm
+#       - option --preserve-root is now handled in the correct way
+#       - when rm and trash-put is executed, the command is printed in
+#         verbose mode
+#       - when rm returns a nonzero exit status, that failure is now printed
+#       - removing /foo/bar/. and /foo/bar/.. is not allowed
+#       - rmtrash now informs the user when skipping a file when option
+#         --one-file-system is present
+#       - unknown file type is not a error anymore
+#       - two special errors of trash-put are now caught:
+#         - unable to create the trashcan (permission denied)
+#         - trying to trash the trashcan
+#   v1.5 - 2012-11-19 19:36:50+0100
+#       - depending on the version of the installed trash-cli package,
+#         we must use different trash commands
+#       - minor code improvements
+#   v1.6 - 2013-08-07 13:53:21+0200
+#       - minor improvements
+
+LC_ALL=C
+APP_NAME="$(basename "$0")"
+
+function showHelp() {
+	echo "Usage:"
+	echo "  $APP_NAME [OPTION]... FILE..."
+	echo
+	echo "Put files (and directories) in trash using the \`$TRASH_CMD' command in a way"
+	echo "that is, otherwise as \`$TRASH_CMD' itself, compatible to GNUs \`rm'."
+	echo "  see $RM_CMD --help"
+	echo "  see $TRASH_CMD --help"
+	echo
+	echo "Help Options:"
+	echo "      --help                display this help and exit"
+	echo "      --version             output version information and exit"
+	echo
+	echo "Application Options:"
+	echo "  -f, --force               ignore nonexistent files, never prompt"
+	echo "  -i                        prompt before every removal"
+	echo "  -I                        prompt once before removing more than three files,"
+	echo "                              or when removing recursively.  Less intrusive"
+	echo "                              than -i, while still giving protection against"
+	echo "                              most mistakes"
+	echo "      --interactive[=WHEN]  prompt according to WHEN: never, once (-I), or"
+	echo "                              always (-i).  Without WHEN, prompt always"
+	echo "      --one-file-system     when removing a hierarchy recursively, skip any"
+	echo "                              directory that is on a file system different"
+	echo "                              from that of the corresponding command line"
+	echo "                              argument"
+	echo "      --no-preserve-root    do not treat \`/' specially"
+	echo "      --preserve-root       do not remove \`/' (default)"
+	echo "  -r, -R, --recursive       remove directories and their contents recursively"
+	echo "  -v, --verbose             explain what is being done"
+	echo
+	echo "Replacement options:"
+	echo "  These options are not supposed to be used when calling $APP_NAME, they help"
+	echo "  you to control how and in which cases \`rm' is replaced."
+	echo "      --forbid-root         forbid user \`root' to trash files.  When standard"
+	echo "                              input is a terminal, the user is asked to pass"
+	echo "                              the command to \`$RM_CMD', otherwise the entire"
+	echo "                              command is aborted"
+	echo "      --forbid-root-force   when user \`root' trys to trash files, the entire"
+	echo "                              command is automatically passed to \`$RM_CMD'."
+	echo
+	echo "By default, $APP_NAME does not remove directories.  Use the --recursive"
+	echo "(-r or -R) option to remove each listed directory, too, along with all of"
+	echo "its contents."
+	echo
+	echo "To remove a file whose name starts with a \`-', for example \`-foo', use one"
+	echo "of these commands:"
+	echo "  $APP_NAME -- -foo"
+	echo "  $APP_NAME ./-foo"
+	echo
+	echo "See also \`trash-list' (or \`list-trash'), \`trash-empty' (or \`empty-trash'),"
+	echo "\`restore-trash', \`trash-rm', and the FreeDesktop.org Trash Specification"
+	echo "at <http://www.ramendik.ru/docs/trashspec.html>."
+	echo
+	echo "Please report bugs using the contact form at <http://www.daniel-rudolf.de/>"
+	echo "Besides, you will find general help and information about $APP_NAME there."
+}
+
+function showVersion() {
+	echo "rmtrash 1.6 (build 20130807)"
+	echo "Copyright (C) 2011-2013 Daniel Rudolf"
+	echo "License GPLv3: GNU GPL version 3 only <http://gnu.org/licenses/gpl.html>."
+	echo "This is free software: you are free to change and redistribute it."
+	echo "There is NO WARRANTY, to the extent permitted by law."
+	echo
+	echo "Written by Daniel Rudolf <http://www.daniel-rudolf.de/>"
+}
+
+function getOptionsAsCmdString() {
+	local CMD=""
+	
+	if [ $FORCE == true ]; then
+		CMD+=" --force"
+	elif [ "$INTERACTIVE" != "default" ]; then
+		CMD+=" --interactive=$INTERACTIVE"
+	fi
+	if [ $ONE_FILE_SYSTEM == true ]; then
+		CMD+=" --one-file-system"
+	fi
+	if [ $PRESERVE_ROOT == false ]; then
+		CMD+=" --no-preserve-root"
+	fi
+	if [ $RECURSIVE == true ]; then
+		CMD+=" --recursive"
+	fi
+	if [ $VERBOSE == true ]; then
+		CMD+=" --verbose"
+	fi
+	
+	if [ -n "$CMD" ]; then
+		echo "${CMD:1}"
+	fi
+}
+
+# get path of rm
+RM_CMD="$(which "rm")"
+
+# check if rm is installed
+if [ -z "$RM_CMD" ]; then
+	echo "$APP_NAME: command \`rm' was not found." >&2
+	exit 4
+fi
+
+# check if rm is executable
+if [ ! -x "$RM_CMD" ]; then
+	echo "$APP_NAME: \`$RM_CMD' is not executable." >&2
+	exit 4
+fi
+
+# check if trash-cli package is installed
+TRASH_PACKAGE_INFORMATION="$(dpkg -p trash-cli)"
+if [ "$?" -ne 0 ] || [ -z "$TRASH_PACKAGE_INFORMATION" ]; then
+	echo "$APP_NAME: This program requires a command line interface trashcan utility." >&2
+	echo "It seems that the required program is not installed yet.  You can catch up on" >&2
+	echo "that by typing:  sudo apt-get install trash-cli" >&2
+	exit 4
+fi
+
+# get version of the trash-cli package
+TRASH_VERSION="$(echo "$TRASH_PACKAGE_INFORMATION" | sed -n 's/^Version: \(.*\)/\1/p')"
+if [ -z "$TRASH_VERSION" ]; then
+	echo "$APP_NAME: Unable to determine version of the \`trash-cli' package." >&2
+	exit 4
+fi
+
+# get path of trash
+# the path depends on the installed version of the trash-cli package	
+dpkg --compare-versions "$TRASH_VERSION" "ge" "0.11"
+if [ "$?" -eq "0" ]; then
+	TRASH_CMD="$(which "trash-put")"
+else
+	TRASH_CMD="$(which "trash")"
+fi
+
+# check if trash command is found
+if [ -z "$TRASH_CMD" ]; then
+	echo "$APP_NAME: Unable to find the trashcan command within \$PATH." >&2
+	exit 4
+fi
+
+# check if trash is executable
+if [ ! -x "$TRASH_CMD" ]; then
+	echo "$APP_NAME: \`$TRASH_CMD' is not executable." >&2
+	exit 4
+fi
+
+# check if shell is running in interactive mode
+SHELL_IN_INTERACTIVE_MODE=false
+tty --quiet
+if [ $? -eq 0 ]; then
+	SHELL_IN_INTERACTIVE_MODE=true
+fi
+
+# use getopt to parse parameters
+if ! OPTIONS="$(getopt -n "$APP_NAME" -o fiIrRv -l "force" -l "interactive::" -l "one-file-system" -l "no-preserve-root" -l "preserve-root" -l "recursive" -l "verbose" -l "forbid-root" -l "forbid-root-force" -l "help" -l "version" -- "$@")"; then
+	showHelp
+	exit 2
+fi
+eval set -- "$OPTIONS"
+
+# default option values
+FORCE=false			# -f / --force				boolean
+INTERACTIVE="default"		# -i / -I / --interactive		string ( default / never / once / always )
+ONE_FILE_SYSTEM=false		# --one-file-system			boolean
+PRESERVE_ROOT=true		# --preserve-root / --no-preserve-root	boolean
+RECURSIVE=false			# -r / -R / --recursive			boolean
+VERBOSE=false			# -v / --verbose			boolean
+FORBID_ROOT="no"		# --forbid-root / --forbid-root-force	string ( no / yes / force )
+
+# parse options
+while true; do
+	case "$1" in
+		"-f"|"--force")
+			FORCE=true
+			INTERACTIVE="never"
+			shift
+			;;
+
+		"-i"|"-I"|"--interactive")
+			FORCE=false
+			
+			if [ "$1" == "--interactive" ]; then
+				if [ "$2" == "never" ] || [ "$2" == "no" ] || [ "$2" == "none" ]; then
+					INTERACTIVE="never"
+				elif [ "$2" == "once" ]; then
+					INTERACTIVE="once"
+				elif [ "$2" == "always" ] || [ "$2" == "yes" ] || [ -z "$2" ]; then
+					INTERACTIVE="always"
+				else
+					echo "$APP_NAME: invalid argument \`$2' for \`--interactive'" >&2
+					echo "Valid arguments are:" >&2
+					echo "  - \`never', \`no', \`none'" >&2
+					echo "  - \`once'" >&2
+					echo "  - \`always', \`yes'" >&2
+					echo "Try \`$APP_NAME --help' for more information." >&2
+					exit 2
+				fi
+
+				shift 2
+			else
+				if [ "$1" == "-I" ]; then
+					INTERACTIVE="once"
+				else
+					INTERACTIVE="always"
+				fi
+
+				shift
+			fi
+			;;
+
+		"--one-file-system")
+			ONE_FILE_SYSTEM=true
+			shift
+			;;
+
+		"--preserve-root")
+			PRESERVE_ROOT=true
+			shift
+			;;
+
+		"--no-preserve-root")
+			PRESERVE_ROOT=false
+			shift
+			;;
+
+		"-r"|"-R"|"--recursive")
+			RECURSIVE=true
+			shift
+			;;
+
+		"-v"|"--verbose")
+			VERBOSE=true
+			shift
+			;;
+
+		"--forbid-root")
+			FORBID_ROOT="yes"
+			shift
+			;;
+
+		"--forbid-root-force")
+			FORBID_ROOT="force"
+			shift
+			;;
+
+		"--help")
+			showHelp
+			exit 0
+			;;
+
+		"--version")
+			showVersion
+			exit 0
+			;;
+
+		"--")
+			shift
+			break
+			;;
+
+		*)
+			echo "$APP_NAME: execution of getopt failed" >&2
+			exit 2
+			;;
+	esac
+done
+
+# no arguments given
+if [ $# -eq 0 ]; then
+	showHelp
+	exit 2
+fi
+
+# forbid root?
+if [ "$FORBID_ROOT" != "no" ] && [ $(id -u) -eq 0 ]; then
+	echo "$APP_NAME: user \`root' should never trash files" >&2
+
+	PASS_COMMAND=false
+	if [ "$FORBID_ROOT" == "yes" ]; then
+		# prompt
+		if [ $SHELL_IN_INTERACTIVE_MODE == true ]; then
+			echo -n "pass entire command to \`$RM_CMD' (delete arguments instead of trashing)? "
+			read PASS_COMMAND_ANSWER
+
+			if [ "$PASS_COMMAND_ANSWER" == "y" ] || [ "$PASS_COMMAND_ANSWER" == "yes" ]; then
+				PASS_COMMAND=true
+			fi
+		else
+			# exit if shell is not running in interactive mode
+			exit 32
+		fi
+	else
+		# force
+		PASS_COMMAND=true
+		echo "$APP_NAME: entire command will be passed to \`$RM_CMD'..."
+	fi
+
+	if [ $PASS_COMMAND == true ]; then
+		# create command
+		CMD="$RM_CMD"
+		CMD_OPTIONS="$(getOptionsAsCmdString)"
+		CMD_ARGUMENTS=""
+		while [ $# -gt 0 ]; do
+			CMD_ARGUMENTS+=" \"$1\""
+			shift
+		done
+
+		# execute command	
+		if [ $VERBOSE == true ]; then
+			echo "$APP_NAME: executing \`$CMD $CMD_OPTIONS ${CMD_ARGUMENTS:1}'"
+		fi
+		eval "$CMD $CMD_OPTIONS ${CMD_ARGUMENTS:1}"
+		RM_EXIT_STATUS=$?
+		
+		if [ "$RM_EXIT_STATUS" -ne 0 ]; then
+			echo "$APP_NAME: execution of \`$RM_CMD' failed (exit status $RM_EXIT_STATUS)" >&2
+			exit 16
+		fi
+		exit 0
+	fi
+fi
+
+# exit if shell is not running in interactive mode and we should ask for every deletion
+if [ $SHELL_IN_INTERACTIVE_MODE == false ] && [ "$INTERACTIVE" == "always" ]; then
+	echo "$APP_NAME: \`--interactive=always' is not allowed in non-interactive mode" >&2
+	exit 32
+fi
+
+# ask to succeed once
+if [ "$INTERACTIVE" == "once" ]; then
+	if [ $RECURSIVE == true ] || [ $# -gt 3 ]; then
+		if [ $SHELL_IN_INTERACTIVE_MODE == true ]; then
+			echo -n "$APP_NAME: remove all arguments? "
+			read ASK_TO_SUCCEED_ANSWER
+			if [ "$ASK_TO_SUCCEED_ANSWER" != "y" ] && [ "$ASK_TO_SUCCEED_ANSWER" != "yes" ]; then
+				exit 0
+			fi
+		else
+			# exit if shell is not running in interactive mode
+			echo "$APP_NAME: \`--interactive=once' is not allowed in non-interactive mode" >&2
+			exit 32
+		fi
+	fi
+
+	# interactive == once is finally done...
+	INTERACTIVE="default"
+fi
+
+# handle each argument in a subprocess
+EXIT=0
+if [ $# -gt 1 ]; then
+	# create command
+	CMD="$0"
+	CMD_OPTIONS="$(getOptionsAsCmdString)"
+
+	# parse arguments
+	while [ $# -gt 1 ]; do
+		# execute command
+		eval "$CMD $CMD_OPTIONS \"$1\""
+
+		# get return value
+		EXIT_STATUS=$?
+		if [ $EXIT_STATUS -ne 0 ]; then
+			EXIT=$(( $EXIT | $EXIT_STATUS ))
+		fi
+
+		# process the next argument
+		shift
+	done
+fi
+
+# there's only one argument (left)
+ARGUMENT="$1"
+
+if [ "$ARGUMENT" != "/" ]; then
+	# remove trailing slash
+	let "ARGUMENT_TRAILING_SLASH_TEST_INDEX = ${#ARGUMENT} -1"
+	if [ "${ARGUMENT:$ARGUMENT_TRAILING_SLASH_TEST_INDEX}" == "/" ]; then
+		ARGUMENT="${1:0:$ARGUMENT_TRAILING_SLASH_TEST_INDEX}"
+	fi
+else
+	# you can't remove /
+	if [ $RECURSIVE == true ] && [ $PRESERVE_ROOT == true]; then
+		echo "$APP_NAME: cannot remove root directory \`/'" >&2
+		exit 64
+	fi
+fi
+
+# you can't remove . or ..
+ARGUMENT_BASENAME="$(basename "$ARGUMENT")"
+if [ "$ARGUMENT" == "." ] || [ "$ARGUMENT" == ".." ]; then
+	echo "$APP_NAME: cannot remove directory \`$ARGUMENT'" >&2
+	exit 128
+fi
+if [ "$ARGUMENT_BASENAME" == "." ] || [ "$ARGUMENT_BASENAME" == ".." ]; then
+	echo "$APP_NAME: cannot remove \`$ARGUMENT_BASENAME' directory \`$ARGUMENT'" >&2
+	exit 128
+fi
+
+# no such file or directory
+if [ ! -e "$ARGUMENT" ]; then
+	if [ $FORCE == false ]; then
+		echo "$APP_NAME: cannot remove \`$ARGUMENT': No such file or directory" >&2
+	fi
+	exit 256
+fi
+
+# recursive mode
+if [ $RECURSIVE == true ]; then
+	# only delete on this filesystem
+	FIND_ONE_FILE_SYSTEM_OPTION=""
+	if [ $ONE_FILE_SYSTEM == true ]; then
+		FIND_ONE_FILE_SYSTEM_OPTION="-xdev"
+	fi
+
+	# add files
+	while IFS="" read -r -u 4 -d $'\0' FILE; do
+		FILES[${#FILES[@]}]="$FILE"
+	done 4< <(find "$ARGUMENT" $FIND_ONE_FILE_SYSTEM_OPTION -print0)
+else
+	# add file
+	FILES[${#FILES[@]}]="$ARGUMENT"
+fi
+
+# parse files
+INDEX=0
+MAX=${#FILES[@]}
+while [ $INDEX -lt $MAX ]; do
+	FILENAME="${FILES[$INDEX]}"
+	if [ "${FILENAME:0:1}" == "/" ]; then
+		FILE="$FILENAME"
+	else
+		FILE="$PWD/$FILENAME"
+	fi
+
+	# delete a directory
+	if [ -d "$FILE" ] && [ ! -h "$FILE" ]; then
+		# deleting directories is only allowed in recursive mode
+		if [ $RECURSIVE == false ]; then
+			echo "$APP_NAME: cannot remove \`$FILENAME': Is a directory" >&2
+			EXIT=$(( $EXIT | 512 ))
+			let "INDEX++"
+			continue
+
+		else
+			# descend into non-empty directory
+			if [ -z "$(find "$FILE" -maxdepth 0 -empty)" ]; then
+				# we should delete on this file system only,
+				# consequently we have to check if this directory
+				# is a mount point of another file system
+				if [ $ONE_FILE_SYSTEM == true ]; then
+					# check if the next file is part of this directory
+					let "CHECK_INDEX = $INDEX + 1"
+					if [ $CHECK_INDEX -lt $MAX ]; then
+						CHECK_FILENAME="${FILES[$CHECK_INDEX]}"
+						if [ "${CHECK_FILENAME:0:1}" == "/" ]; then
+							CHECK_FILE="$CHECK_FILENAME"
+						else
+							CHECK_FILE="$PWD/$CHECK_FILENAME"
+						fi
+
+						# this directory is not empty but the next file is not part of it,
+						# thus this directory is a mount point of another file system
+						if [ "$(dirname "$CHECK_FILE")" != "$FILE" ]; then
+							echo "$APP_NAME: skipping \`$FILE', since it's on a different filesystem"
+							
+							# skip it
+							let "INDEX++"
+							continue
+						fi
+					fi
+				fi
+
+				ASK_TO_DESCEND=false
+				if [ "$INTERACTIVE" == "always" ]; then
+					# prompt always
+					ASK_TO_DESCEND=true
+				elif [ "$INTERACTIVE" != "never" ] && [ ! -w "$FILE" ] && [ $SHELL_IN_INTERACTIVE_MODE == true ]; then
+					# prompt if directory isn't writable
+					ASK_TO_DESCEND=true
+				fi
+
+				# prompt
+				if [ $ASK_TO_DESCEND == true ]; then
+					echo -n "$APP_NAME: descend into "
+					if [ ! -w "$FILE" ]; then
+						echo -n "write-protected "
+					fi
+					echo -n "directory \`$FILENAME'? "
+					read ASK_TO_DESCEND_ANSWER
+
+					# we don't want to descend into this directory so skip all containing files
+					if [ "$ASK_TO_DESCEND_ANSWER" != "y" ] && [ "$ASK_TO_DESCEND_ANSWER" != "yes" ]; then
+						SKIP_FILE_COUNT="$(find "$FILE" $FIND_ONE_FILE_SYSTEM_OPTION -exec printf '.' \; | wc -c)"
+						let "INDEX = $INDEX + $SKIP_FILE_COUNT"
+						continue
+					fi
+				fi
+
+				# okay, let's do it
+				DESCENDED_DIRECTORIES[${#DESCENDED_DIRECTORIES[@]}]="$FILENAME"
+				let "INDEX++"
+				continue
+			fi
+		fi
+	fi
+
+	ASK_TO_DELETE=false
+	if [ "$INTERACTIVE" == "always" ]; then
+		# prompt always
+		ASK_TO_DELETE=true
+	elif [ "$INTERACTIVE" != "never" ] && [ ! -w "$FILE" ] && [ $SHELL_IN_INTERACTIVE_MODE == true ]; then
+		# prompt if file isn't writable
+		ASK_TO_DELETE=true
+	fi
+
+	# prompt
+	if [ $ASK_TO_DELETE == true ]; then
+		QUESTION="$APP_NAME: remove "
+		if [ ! -w "$FILE" ]; then
+			QUESTION+="write-protected "
+		fi
+		if [ -h "$FILE" ]; then
+			QUESTION+="symbolic link "
+		else
+			if [ -d "$FILE" ]; then
+				# non-empty directorys can't get to this point
+				QUESTION+="empty directory "
+			elif [ -f "$FILE" ]; then
+				if [ "$(stat -c %s "$FILE")" -eq 0 ]; then
+					QUESTION+="regular empty file "
+				else
+					QUESTION+="regular file "
+				fi
+			elif [ -c "$FILE" ]; then
+				QUESTION+="character special file "
+			elif [ -b "$FILE" ]; then
+				QUESTION+="block special file "
+			elif [ -p "$FILE" ]; then
+				QUESTION+="named pipe "
+			elif [ -S "$FILE" ]; then
+				QUESTION+="socket "
+			else
+				# unknown file type
+				QUESTION+="file "
+			fi
+		fi
+		QUESTION+="\`$FILENAME'?"
+
+		echo -n "$QUESTION "
+		read ASK_TO_DELETE_ANSWER
+
+		if [ "$ASK_TO_DELETE_ANSWER" != "y" ] && [ "$ASK_TO_DELETE_ANSWER" != "yes" ]; then
+			let "INDEX++"
+			continue
+		fi
+	fi
+
+	# okay, let's delete this one
+	DELETE_FILES[${#DELETE_FILES[@]}]="$FILE"
+
+	# do we descended into a directory?
+	while [ ${#DESCENDED_DIRECTORIES[@]} -gt 0 ]; do
+		# into which directory we descended last?
+		let "DESCENDED_DIRECTORY_INDEX = ${#DESCENDED_DIRECTORIES[@]} - 1"
+		DESCENDED_DIRECTORYNAME=${DESCENDED_DIRECTORIES[$DESCENDED_DIRECTORY_INDEX]}
+		if [ "${DESCENDED_DIRECTORYNAME:0:1}" == "/" ]; then
+			DESCENDED_DIRECTORY="$DESCENDED_DIRECTORYNAME"
+		else
+			DESCENDED_DIRECTORY="$PWD/$DESCENDED_DIRECTORYNAME"
+		fi
+
+		# are there any more files to parse?
+		let "CHECK_INDEX = $INDEX + 1"
+		if [ $CHECK_INDEX -lt $MAX ]; then
+			# what's next?
+			CHECK_FILENAME="${FILES[$CHECK_INDEX]}"
+			if [ "${FILENAME:0:1}" == "/" ]; then
+				CHECK_FILE="$CHECK_FILENAME"
+			else
+				CHECK_FILE="$PWD/$CHECK_FILENAME"
+			fi
+
+			# not all files in the descended directory were proccessed
+			# consequently the descended directory can't be empty already
+			if [ "$(dirname "$CHECK_FILE")" == "$DESCENDED_DIRECTORY" ]; then
+				break
+			fi
+		fi
+
+		# get all files in the descended directory
+		DESCENDED_DIRECTORY_FILE_COUNT=0
+		while IFS="" read -r -u 4 -d $'\0' DESCENDED_DIRECTORY_FILE; do
+			DESCENDED_DIRECTORY_FILES[$DESCENDED_DIRECTORY_FILE_COUNT]="$DESCENDED_DIRECTORY_FILE"
+			let "DESCENDED_DIRECTORY_FILE_COUNT++"
+		done 4< <(find "$DESCENDED_DIRECTORY" -mindepth 1 -maxdepth 1 -print0)
+
+		# now we have to check if all of these files should be deleted
+		let "DESCENDED_DIRECTORY_FILES_INDEX = ${#DESCENDED_DIRECTORY_FILES[@]} - 1"
+		let "DELETE_FILES_INDEX = ${#DELETE_FILES[@]} - 1"
+		FUTURE_DESCENDED_DIRECTORY_FILE_COUNT=$DESCENDED_DIRECTORY_FILE_COUNT
+		while [ $DESCENDED_DIRECTORY_FILES_INDEX -ge 0 ] && [ $DELETE_FILES_INDEX -ge 0 ]; do
+			# yep, this file should be deleted
+			if [ "${DESCENDED_DIRECTORY_FILES[$DESCENDED_DIRECTORY_FILES_INDEX]}" == "${DELETE_FILES[$DELETE_FILES_INDEX]}" ]; then
+				let "FUTURE_DESCENDED_DIRECTORY_FILE_COUNT--"
+
+				let "DESCENDED_DIRECTORY_FILES_INDEX--"
+				let "DELETE_FILES_INDEX--"
+
+			# nope, this file should not be deleted
+			# consequently the directory can't be empty
+			else
+				break
+			fi
+		done
+
+		# clean up
+		unset DESCENDED_DIRECTORY_FILES
+
+		# all files should be deleted
+		if [ $FUTURE_DESCENDED_DIRECTORY_FILE_COUNT -eq 0 ]; then
+			# prompt
+			REPLACE_FILES_WITH_DIRECTORY=true
+			if [ "$INTERACTIVE" == "always" ]; then
+				echo -n "$APP_NAME: remove "
+				if [ ! -w "$DESCENDED_DIRECTORY" ]; then
+					echo -n "write-protected "
+				fi
+				echo -n "empty directory \`$DESCENDED_DIRECTORYNAME'? "
+				read ASK_TO_DELETE_ANSWER
+
+				if [ "$ASK_TO_DELETE_ANSWER" != "y" ] && [ "$ASK_TO_DELETE_ANSWER" != "yes" ]; then
+					REPLACE_FILES_WITH_DIRECTORY=false
+				fi
+			fi
+
+			# okay, let's do it
+			if [ $REPLACE_FILES_WITH_DIRECTORY == true ]; then
+				# remove all containing files from the deletion list and....
+				DELETE_FILES_INDEX=0
+				let "DELETE_FILES_MAX = ${#DELETE_FILES[@]} - $DESCENDED_DIRECTORY_FILE_COUNT"
+				while [ $DELETE_FILES_INDEX -lt $DELETE_FILES_MAX ]; do
+					NEW_DELETE_FILES[$DELETE_FILES_INDEX]="${DELETE_FILES[$DELETE_FILES_INDEX]}"
+					let "DELETE_FILES_INDEX++"
+				done
+
+				declare -a DELETE_FILES=( "${NEW_DELETE_FILES[@]}" )
+				unset NEW_DELETE_FILES
+
+				# add the descended directory instead
+				DELETE_FILES[$DELETE_FILES_INDEX]="$DESCENDED_DIRECTORY"
+			fi
+		fi
+
+		# all files have been checked, so remove the directory from the list of descended directories
+		if [ $DESCENDED_DIRECTORY_INDEX == 0 ]; then
+			unset DESCENDED_DIRECTORIES
+		else
+			DESCENDED_DIRECTORIES_INDEX=0
+			DESCENDED_DIRECTORIES_MAX=$DESCENDED_DIRECTORY_INDEX
+			while [ $DESCENDED_DIRECTORIES_INDEX -lt $DESCENDED_DIRECTORIES_MAX ]; do
+				NEW_DESCENDED_DIRECTORIES[$DESCENDED_DIRECTORIES_INDEX]="${DESCENDED_DIRECTORIES[$DESCENDED_DIRECTORIES_INDEX]}"
+				let "DESCENDED_DIRECTORIES_INDEX++"
+			done
+
+			declare -a DESCENDED_DIRECTORIES=( "${NEW_DESCENDED_DIRECTORIES[@]}" )
+			unset NEW_DESCENDED_DIRECTORIES
+		fi
+	done
+
+	# we're finished here, parse the next file
+	let "INDEX++"
+done
+
+# create command
+if [ ${#DELETE_FILES[@]} -gt 0 ]; then
+	CMD="$TRASH_CMD"
+	if [ $VERBOSE == true ]; then
+		CMD+=" --verbose"
+	fi
+	
+	# add files to command
+	INDEX=0
+	MAX=${#DELETE_FILES[@]}
+	while [ $INDEX -lt $MAX ]; do
+		CMD+=" \"${DELETE_FILES[$INDEX]}\""
+		let "INDEX++"
+	done
+	
+	# execute command
+	if [ $VERBOSE == true ]; then
+		echo "$APP_NAME: executing \`$CMD'"
+	fi
+	STDOUT="$(eval "$CMD" 2>&1)"
+	
+	# remove traceback from stdout
+	if [ -n "$STDOUT" ]; then
+		STDOUT_OLD="$STDOUT"
+		STDOUT=""
+	
+		IFS=$'\n'
+		IS_TRACEBACK=false
+		for STDOUT_LINE in $STDOUT_OLD; do
+			if [ -n "$STDOUT" ]; then
+				n=$'\n'
+			fi
+	
+			if [ "$STDOUT_LINE" == "Traceback (most recent call last):" ]; then
+				IS_TRACEBACK=true
+				continue
+			fi
+		
+			if [ $IS_TRACEBACK == true ]; then
+				if [ "${STDOUT_LINE:0:2}" != "  " ]; then
+					STDOUT+="$n$STDOUT_LINE"
+					IS_TRACEBACK=false
+				fi
+			else
+				STDOUT+="$n$STDOUT_LINE"
+			fi
+		done
+	fi
+	
+	# catch some special errors
+	if [ -n "$STDOUT" ]; then
+		# unable to create trashcan (permission denied)
+		while [ true ]; do
+			# get insufficient trashcan
+			INSUFFICIENT_TRASHCAN="$(echo "$STDOUT" | grep -m 1 -b -oP "(?<=^OSError: \[Errno 13\] Permission denied: ')([^\0]*?)/\.Trash-([0-9]+?)(?='$)")"
+			if [ -n "$INSUFFICIENT_TRASHCAN" ]; then
+				TEMP="$(echo "$INSUFFICIENT_TRASHCAN" | grep -m 1 -oP "^([0-9]+?)(?=:)")"
+				
+				# fix insufficient trashcan string
+				let "INSUFFICIENT_TRASHCAN_INDEX = ${#TEMP} + 1"
+				INSUFFICIENT_TRASHCAN="${INSUFFICIENT_TRASHCAN:$INSUFFICIENT_TRASHCAN_INDEX}"
+		
+				# remove that error from stdout
+				let "STDOUT_PREFIX_LENGTH = $TEMP - 40"
+				let "STDOUT_SUFFIX_INDEX = $TEMP + ${#INSUFFICIENT_TRASHCAN} + 1 + 1"
+				STDOUT="${STDOUT:0:$STDOUT_PREFIX_LENGTH}${STDOUT:$STDOUT_SUFFIX_INDEX}"
+				
+				# check if insufficient trashcan is valid
+				if [ "$(basename "$INSUFFICIENT_TRASHCAN")" != ".Trash-$(id -u)" ]; then
+					continue
+				fi
+				
+				# get delete argument
+				DELETE_ARGUMENT="$(echo "$STDOUT" | grep -m 1 -b -oP "(?<=^trash: cannot trash \`)([^\0]+?)(?=': \[Errno 13\] Permission denied: '$INSUFFICIENT_TRASHCAN'$)")"
+				if [ -n "$DELETE_ARGUMENT" ]; then
+					TEMP="$(echo "$DELETE_ARGUMENT" | grep -m 1 -oP "^([0-9]+?)(?=:)")"
+				
+					# fix delete argument string
+					let "DELETE_ARGUMENT_INDEX = ${#TEMP} + 1"
+					DELETE_ARGUMENT="${DELETE_ARGUMENT:$DELETE_ARGUMENT_INDEX}"
+		
+					# remove that error from stdout
+					let "STDOUT_PREFIX_LENGTH = $TEMP - 21"
+					let "STDOUT_SUFFIX_INDEX = $TEMP + ${#DELETE_ARGUMENT} + 34 + ${#INSUFFICIENT_TRASHCAN} + 1 + 1"
+					STDOUT="${STDOUT:0:$STDOUT_PREFIX_LENGTH}${STDOUT:$STDOUT_SUFFIX_INDEX}"
+					
+					# output what actually happened
+					echo "$APP_NAME: cannot remove \`$DELETE_ARGUMENT': unable to create trashcan \`$INSUFFICIENT_TRASHCAN': Permission denied" >&2
+					EXIT=$(( $EXIT | 1024 ))
+					
+					# recommend user to create a trashcan-base-directory
+					INSUFFICIENT_TRASHCAN_BASE_DIRECTORY="$(echo "$INSUFFICIENT_TRASHCAN" | grep -m 1 -oP "^([^\0]+?).Trash(?=-$(id -u)$)")"
+					
+					echo "" >&2
+					echo "According to the FreeDesktop.org Trash Specification, it's recommended to" >&2
+					echo "create a directory where all users can create a trashcan on their own." >&2
+					echo "You can catch up on that by typing:" >&2
+					echo -e "\tsudo mkdir -p \"$INSUFFICIENT_TRASHCAN_BASE_DIRECTORY\"" >&2
+					echo -e "\tsudo chmod 1777 \"$INSUFFICIENT_TRASHCAN_BASE_DIRECTORY\"" >&2
+					echo "When you've done that, repeat your deletion-command. Alternatively" >&2
+					echo "you can delete the argument instead of trashing it." >&2
+					echo "" >&2
+	
+					# ask to pass argument to rm if shell is in interactive mode
+					if [ $SHELL_IN_INTERACTIVE_MODE == true ]; then
+						echo -n "pass argument to \`$RM_CMD' (delete argument instead of trashing)? "
+						read PASS_COMMAND_ANSWER
+
+						if [ "$PASS_COMMAND_ANSWER" == "y" ] || [ "$PASS_COMMAND_ANSWER" == "yes" ]; then
+							CMD="$RM_CMD"
+							CMD_OPTIONS="$(getOptionsAsCmdString)"
+							CMD_ARGUMENTS="\"$DELETE_ARGUMENT\""
+						
+							if [ $VERBOSE == true ]; then
+								echo "$APP_NAME: executing \`$CMD $CMD_OPTIONS $CMD_ARGUMENTS'"
+							fi
+							eval "$CMD $CMD_OPTIONS $CMD_ARGUMENTS"
+							RM_EXIT_STATUS=$?
+							
+							if [ "$RM_EXIT_STATUS" -ne 0 ]; then
+								EXIT=$(( $EXIT | 16 ))
+								echo "$APP_NAME: execution of \`$RM_CMD' failed (exit status $RM_EXIT_STATUS)" >&2
+							fi
+						fi
+					fi
+				fi
+				
+			# no more errors
+			else
+				break
+			fi
+		done
+		
+		# you can't trash the trashcan
+		while [ true ]; do
+			# get delete argument
+			DELETE_ARGUMENT="$(echo "$STDOUT" | grep -m 1 -b -oP "(?<=^shutil\.Error: Cannot move a directory ')([^\0]+?)(?=' into itself '([^\0]+?)'\.$)")"
+			if [ -n "$DELETE_ARGUMENT" ]; then
+				TEMP="$(echo "$DELETE_ARGUMENT" | grep -m 1 -oP "^([0-9]+?)(?=:)")"
+				
+				# fix delete argument string
+				let "DELETE_ARGUMENT_INDEX = ${#TEMP} + 1"
+				DELETE_ARGUMENT="${DELETE_ARGUMENT:$DELETE_ARGUMENT_INDEX}"
+				
+				# get delete argument target
+				DELETE_ARGUMENT_TARGET="$(echo "$STDOUT" | grep -m 1 -oP "(?<=^shutil\.Error: Cannot move a directory '$DELETE_ARGUMENT' into itself ')([^\0]+?)(?='\.$)")"
+		
+				# remove that error from stdout
+				let "STDOUT_PREFIX_LENGTH = $TEMP - 39"
+				let "STDOUT_SUFFIX_INDEX = $TEMP + ${#DELETE_ARGUMENT} + 15 + ${#DELETE_ARGUMENT_TARGET} + 2 + 1"
+				STDOUT="${STDOUT:0:$STDOUT_PREFIX_LENGTH}${STDOUT:$STDOUT_SUFFIX_INDEX}"
+				
+				# output what actually happened
+				echo "$APP_NAME: cannot remove \`$DELETE_ARGUMENT': you can't trash the trashcan" >&2
+				EXIT=$(( $EXIT | 2048 ))
+			
+				# ask to pass argument to rm if shell is in interactive mode
+				if [ $SHELL_IN_INTERACTIVE_MODE == true ]; then
+					echo -n "pass argument to \`$RM_CMD' (delete argument instead of trashing)? "
+					read PASS_COMMAND_ANSWER
+
+					if [ "$PASS_COMMAND_ANSWER" == "y" ] || [ "$PASS_COMMAND_ANSWER" == "yes" ]; then
+						CMD="$RM_CMD"
+						CMD_OPTIONS="$(getOptionsAsCmdString)"
+						CMD_ARGUMENTS="\"$DELETE_ARGUMENT\""
+						
+						if [ $VERBOSE == true ]; then
+							echo "$APP_NAME: executing \`$CMD $CMD_OPTIONS $CMD_ARGUMENTS'"
+						fi
+						eval "$CMD $CMD_OPTIONS $CMD_ARGUMENTS"
+						RM_EXIT_STATUS=$?
+							
+						if [ "$RM_EXIT_STATUS" -ne 0 ]; then
+							EXIT=$(( $EXIT | 16 ))
+							echo "$APP_NAME: execution of \`$RM_CMD' failed (exit status $RM_EXIT_STATUS)" >&2
+						fi
+					fi
+				fi
+				
+			# no more errors
+			else
+				break
+			fi
+		done
+	fi
+		
+	# output stdout
+	if [ -n "$STDOUT" ]; then
+		echo "$STDOUT"
+	fi
+fi
+
+exit $EXIT
