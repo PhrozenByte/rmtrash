@@ -1,6 +1,6 @@
 #!/bin/bash
 # rmdirtrash - `rmdir' compatible layer for `trash'
-# Version 1.6 (build 20130807)
+# Version 1.7 (build 20131129)
 #
 #
 # SHORT DESCRIPTION:
@@ -13,7 +13,7 @@
 #   - `dpkg', provided by the package `dpkg'
 #
 #   Note that there are many more dependencies. Nearly every distribution meets
-#   these dependencies by default, so they are not listed here. Please also
+#   those dependencies by default, so they are not listed here. Please also
 #   note that this script uses options of POSIX commands, which are not part of
 #   the POSIX standard. The extended variants provided by GNU are recommended.
 #
@@ -23,23 +23,23 @@
 #
 #
 # EXIT CODES:
-#   An exit status of zero indicates success, and a nonzero value indicates
-#   that an error occured. The following exit codes are fatal, so rmtrash won't
-#   do anything. Note that an nonzero exit status is a bitmask.
+#   An exit status of zero indicates success, a nonzero value indicates the
+#   occurence of an error. The following exit codes are fatal, rmtrash stops
+#   execution.
 #
 #      1  unknown error
 #      2  invalid options
-#      4  requirements of this layer were not met
-#         (trash-put and/or rmdir was not found, is not installed or
-#         not executable)
+#      4  requirements of this layer weren't met
+#         (`trash-put` and/or `rm` wasn't found, is not installed or
+#          is not executable)
 #
-#   The following exit codes are non-fatal, that means that rmtrash only aborted
-#   the corresponding argument. All other arguments, that means all arguments
-#   prior and posterior the failed argument, will be passed as like as nothing
-#   happened.
+#   The following exit codes are non-fatal, thus rmtrash aborted execution of
+#   the corresponding argument only. All other arguments (prior and posterior
+#   the failed argument) will be handled regularly. All following exit codes
+#   are bitmasks.
 #
-#      8  trash-put returned a nonzero exit status
-#     16  rm returned a nonzero exit status
+#      8  `trash-put` returned a nonzero exit status
+#     16  `rm` returned a nonzero exit status
 #     32  user interaction requiered in non-interactive mode
 #     64  cannot remove . or ..
 #    128  no such file or directory
@@ -53,8 +53,8 @@
 #   If you use rmtrash as an bash alias, you maybe noticed, that the alias
 #   doesn't work when using sudo. You can catch up on that by adding
 #       alias sudo='sudo '
-#   to the bashrc. Note the space before the closing quote. The explanation
-#   is found in the alias section of the bash manpage:
+#   to the bashrc. Note the space before the closing quote. Consider the
+#   manpage of bash:
 #       "A trailing space in  value causes the next word to be checked for alias
 #       substitution when the alias is expanded."
 #
@@ -76,83 +76,36 @@
 #
 #
 # CHANGELOG:
-#   v1.1 - 2011-09-11 00:35:31+0200
-#     - errors now output the argument as given, not the computed absolute path
-#     - unnecessary if-clause just before creating the cmd removed
-#   v1.2 - 2011-09-12 22:08:26+0200
-#     - code review to allow special characters (especially \n) in filenames.
-#       Thanks to ubuntuusers.de member Lasall!
-#     - special options --forbid-root and --forbid-root-force added
-#     - some code style improvements
-#   v1.3 - 2011-09-13 16:17:34+0200
-#     - special characters in filenames while deleting parents fixed
-#   v1.4 - 2012-12-11 23:47:24+0100
-#       - paths to rm and trash-put are now read from $PATH using which
-#       - depending on the version of the installed trash-cli package,
-#         we must use different trash commands
-#       - check if trash-put is installed and executable
-#       - minor code improvements
-#   v1.5 - skipped to sync version number with rmtrash
-#   v1.6 - 2013-08-07 14:57:12+0200
-#	- adapting new features of rmtrash 1.4
-#       - minor improvement
+#   v1.1 - 2011-09-11 00:35:00+0200
+#       * printing errors with relative, not absolute paths
+#       * cleaning up the code
+#   v1.2 - 2011-09-12 22:08:00+0200
+#       + adding replacement options --forbid-root and --forbid-root-force
+#       * fixing unexpected behaviour of filenames with special characters
+#         Many thanks to ubuntuusers.de member Lasall!
+#       * improving code styling
+#   v1.3 - 2011-09-13 16:17:00+0200
+#       * fixing filenames with special characters when using --parents
+#   v1.4 - 2012-12-11 23:47:00+0100
+#       + detecting the renaming of `trash` to `trash-put`
+#       + reading paths of `rm` and `trash-put` from $PATH
+#       + checking for executability of `rm` and `trash-put`
+#       * minor code improvements
+#   v1.5 - skipped to sync version numbering with rmtrash
+#   v1.6 - 2013-08-07 14:57:00+0200
+#	+ adapting some new features of rmtrash 1.4
+#       * minor code improvements
+#   v1.7 - 2013-11-29 22:54:00+0100
+#       + adding function showUsage()
+#       * moving --help and --version handling
+#       * improving documentation
 
 LC_ALL=C
 APP_NAME=$(basename "$0")
 
-function ShowHelp() {
+function ShowUsage() {
 	echo "Usage:"
 	echo "  $APP_NAME [OPTION]... DIRECTORY..."
-	echo
-	echo "Put empty directories in trash using the \`$TRASH_CMD' command in a way"
-	echo "that is, otherwise as \`$TRASH_CMD' itself, compatible to GNUs \`rmdir'."
-	echo "  see $RMDIR_CMD --help"
-	echo "  see $TRASH_CMD --help"
-	echo
-	echo "Help Options:"
-	echo "      --help                display this help and exit"
-	echo "      --version             output version information and exit"
-	echo
-	echo "Application Options:"
-	echo "      --ignore-fail-on-non-empty"
-	echo "                 ignore each failure that is solely because a directory is"
-	echo "                    non-empty"
-	echo "  -p, --parents  remove DIRECTORY and its ancestors; e.g., \`$APP_NAME -p a/b/c'"
-	echo "                    is similar to \`$APP_NAME a/b/c a/b a'"
-	echo "  -v, --verbose  output a diagnostic for every directory processed"
-	echo
-	echo "Replacement options:"
-	echo "  These options are not supposed to be used when calling $APP_NAME, they help"
-	echo "  you to control how and in which cases \`rmdir' is replaced."
-	echo "      --forbid-root         forbid user \`root' to trash directories.  When"
-	echo "                              standard input is a terminal, the user is asked"
-	echo "                              to pass the command to \`$RMDIR_CMD', otherwise"
-	echo "                              the entire command is aborted"
-	echo "      --forbid-root-force   when user \`root' trys to trash directories, the"
-	echo "                              entire command is automatically passed to"
-	echo "                              \`$RMDIR_CMD'."
-	echo
-	echo "To remove a directory whose name starts with a \`-', for example \`-foo', use"
-	echo "one of these commands:"
-	echo "  $APP_NAME -- -foo"
-	echo "  $APP_NAME ./-foo"
-	echo
-	echo "See also \`trash-list' (or \`list-trash'), \`trash-empty' (or \`empty-trash'),"
-	echo "\`restore-trash', \`trash-rm', and the FreeDesktop.org Trash Specification"
-	echo "at <http://www.ramendik.ru/docs/trashspec.html>."
-	echo
-	echo "Please report bugs using the contact form at <http://www.daniel-rudolf.de/>"
-	echo "Besides, you will find general help and information about $APP_NAME there."
-}
-
-function ShowVersion() {
-	echo "rmdirtrash 1.6 (build 20130807)"
-	echo "Copyright (C) 2011-2013 Daniel Rudolf"
-	echo "License GPLv3: GNU GPL version 3 only <http://gnu.org/licenses/gpl.html>."
-	echo "This is free software: you are free to change and redistribute it."
-	echo "There is NO WARRANTY, to the extent permitted by law."
-	echo
-	echo "Written by Daniel Rudolf <http://www.daniel-rudolf.de/>"
 }
 
 function getOptionsAsCmdString() {
@@ -234,7 +187,7 @@ fi
 
 # use getopt to parse parameters
 if ! OPTIONS=$(getopt -n "$APP_NAME" -o pv -l "ignore-fail-on-non-empty" -l "parents" -l "verbose" -l "forbid-root" -l "forbid-root-force" -l "help" -l "version" -- "$@"); then
-	ShowHelp
+	ShowUsage
 	exit 2
 fi
 eval set -- "${OPTIONS}"
@@ -274,12 +227,58 @@ while true; do
 			;;
 
 		"--help")
-			ShowHelp
+			ShowUsage
+			echo
+			echo "Put empty directories in trash using the \`$TRASH_CMD' command in a way"
+			echo "that is, otherwise as \`$TRASH_CMD' itself, compatible to GNUs \`rmdir'."
+			echo "  see $RMDIR_CMD --help"
+			echo "  see $TRASH_CMD --help"
+			echo
+			echo "Help Options:"
+			echo "      --help                display this help and exit"
+			echo "      --version             output version information and exit"
+			echo
+			echo "Application Options:"
+			echo "      --ignore-fail-on-non-empty"
+			echo "                 ignore each failure that is solely because a directory is"
+			echo "                    non-empty"
+			echo "  -p, --parents  remove DIRECTORY and its ancestors; e.g., \`$APP_NAME -p a/b/c'"
+			echo "                    is similar to \`$APP_NAME a/b/c a/b a'"
+			echo "  -v, --verbose  output a diagnostic for every directory processed"
+			echo
+			echo "Replacement options:"
+			echo "  These options are not supposed to be used when calling $APP_NAME, they help"
+			echo "  you to control how and in which cases \`rmdir' is replaced."
+			echo "      --forbid-root         forbid user \`root' to trash directories.  When"
+			echo "                              standard input is a terminal, the user is asked"
+			echo "                              to pass the command to \`$RMDIR_CMD', otherwise"
+			echo "                              the entire command is aborted"
+			echo "      --forbid-root-force   when user \`root' trys to trash directories, the"
+			echo "                              entire command is automatically passed to"
+			echo "                              \`$RMDIR_CMD'."
+			echo
+			echo "To remove a directory whose name starts with a \`-', for example \`-foo', use"
+			echo "one of these commands:"
+			echo "  $APP_NAME -- -foo"
+			echo "  $APP_NAME ./-foo"
+			echo
+			echo "See also \`trash-list' (or \`list-trash'), \`trash-empty' (or \`empty-trash'),"
+			echo "\`restore-trash', \`trash-rm', and the FreeDesktop.org Trash Specification"
+			echo "at <http://www.ramendik.ru/docs/trashspec.html>."
+			echo
+			echo "Please report bugs using the contact form at <http://www.daniel-rudolf.de/>"
+			echo "Besides, you will find general help and information about $APP_NAME there."
 			exit 0
 			;;
 
 		"--version")
-			ShowVersion
+			echo "rmdirtrash 1.7 (build 20131129)"
+			echo "Copyright (C) 2011-2013 Daniel Rudolf"
+			echo "License GPLv3: GNU GPL version 3 only <http://gnu.org/licenses/gpl.html>."
+			echo "This is free software: you are free to change and redistribute it."
+			echo "There is NO WARRANTY, to the extent permitted by law."
+			echo
+			echo "Written by Daniel Rudolf <http://www.daniel-rudolf.de/>"
 			exit 0
 			;;
 
@@ -290,6 +289,7 @@ while true; do
 
 		*)
 			echo "$APP_NAME: execution of getopt failed" >&2
+			ShowUsage
 			exit 2
 			;;
 	esac
@@ -297,7 +297,8 @@ done
 
 # no arguments given
 if [ $# -eq 0 ]; then
-	showHelp
+	echo "$APP_NAME: too few arguments" >&2
+	showUsage
 	exit 2
 fi
 

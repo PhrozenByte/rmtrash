@@ -1,6 +1,6 @@
 #!/bin/bash
 # rmtrash - `rm' compatible layer for `trash'
-# Version 1.6 (build 20130807)
+# Version 1.7 (build 20131129)
 #
 #
 # SHORT DESCRIPTION:
@@ -13,7 +13,7 @@
 #   - `dpkg', provided by the package `dpkg'
 #
 #   Note that there are many more dependencies. Nearly every distribution meets
-#   these dependencies by default, so they are not listed here. Please also
+#   those dependencies by default, so they are not listed here. Please also
 #   note that this script uses options of POSIX commands, which are not part of
 #   the POSIX standard. The extended variants provided by GNU are recommended.
 #
@@ -23,23 +23,23 @@
 #
 #
 # EXIT CODES:
-#   An exit status of zero indicates success, and a nonzero value indicates
-#   that an error occured. The following exit codes are fatal, so rmtrash won't
-#   do anything. Note that an nonzero exit status is a bitmask.
+#   An exit status of zero indicates success, a nonzero value indicates the
+#   occurence of an error. The following exit codes are fatal, rmtrash stops
+#   execution.
 #
 #      1  unknown error
 #      2  invalid options
-#      4  requirements of this layer were not met
-#         (trash-put and/or rm was not found, is not installed or not
-#         executable)
+#      4  requirements of this layer weren't met
+#         (`trash-put` and/or `rm` wasn't found, is not installed or
+#          is not executable)
 #
-#   The following exit codes are non-fatal, that means that rmtrash only aborted
-#   the corresponding argument. All other arguments, that means all arguments
-#   prior and posterior the failed argument, will be passed as like as nothing
-#   happened.
+#   The following exit codes are non-fatal, thus rmtrash aborted execution of
+#   the corresponding argument only. All other arguments (prior and posterior
+#   the failed argument) will be handled regularly. All following exit codes
+#   are bitmasks.
 #
-#      8  trash-put returned a nonzero exit status
-#     16  rm returned a nonzero exit status
+#      8  `trash-put` returned a nonzero exit status
+#     16  `rm` returned a nonzero exit status
 #     32  user interaction requiered in non-interactive mode
 #     64  cannot remove /
 #    128  cannot remove . or ..
@@ -53,8 +53,8 @@
 #   If you use rmtrash as an bash alias, you maybe noticed, that the alias
 #   doesn't work when using sudo. You can catch up on that by adding
 #       alias sudo='sudo '
-#   to the bashrc. Note the space before the closing quote. The explanation
-#   is found in the alias section of the bash manpage:
+#   to the bashrc. Note the space before the closing quote. Consider the
+#   manpage of bash:
 #       "A trailing space in  value causes the next word to be checked for alias
 #       substitution when the alias is expanded."
 #
@@ -76,117 +76,51 @@
 #
 #
 # CHANGELOG:
-#   v1.1 - 2011-09-10 22:28:02+0200
-#       - buggy flag --one-file-system fixed (lines 345-367 added)
-#       - find is now using flag -xdev instead of the depraced flag -mount when
-#         deleting on a single file system (flag --one-file-system set)
-#   v1.2 - 2011-09-11 19:12:46+0200
-#       - user is asked before descending into a write-protected directory in
-#         interactive modes "default" and "once"
-#       - user is more often informed about write-protected directories
-#   v1.3 - 2011-09-12 22:08:26+0200
-#       - code review to allow special characters (especially \n) in filenames.
-#         Thanks to ubuntuusers.de member Lasall!
-#       - special options --forbid-root and --forbid-root-force added
-#       - sorting disabled (not necessary, very slow and source of some problems)
-#       - some performance improvements
-#       - some code style improvements
-#   v1.4 - 2011-12-03 23:22:58+0100
-#       - dependencies added
-#       - known bugs added
-#       - much more better exit codes
-#       - new function getOptionsAsCmdString() to map the current option values
-#         back to their arguments
-#       - paths to rm and trash-put are now read from $PATH using which
-#       - check if trash-put is installed and executable
-#       - rmtrash now handles --force and --interactive as like as rm
-#       - option --preserve-root is now handled in the correct way
-#       - when rm and trash-put is executed, the command is printed in
-#         verbose mode
-#       - when rm returns a nonzero exit status, that failure is now printed
-#       - removing /foo/bar/. and /foo/bar/.. is not allowed
-#       - rmtrash now informs the user when skipping a file when option
-#         --one-file-system is present
-#       - unknown file type is not a error anymore
-#       - two special errors of trash-put are now caught:
-#         - unable to create the trashcan (permission denied)
-#         - trying to trash the trashcan
-#   v1.5 - 2012-11-19 19:36:50+0100
-#       - depending on the version of the installed trash-cli package,
-#         we must use different trash commands
-#       - minor code improvements
-#   v1.6 - 2013-08-07 13:53:21+0200
-#       - minor improvements
+#   v1.1 - 2011-09-10 22:28:00+0200
+#       * fixing and improving --one-file-system
+#   v1.2 - 2011-09-11 19:12:00+0200
+#       + prompting user to descend into write-protected directories
+#       + informing user about write-protected directories
+#   v1.3 - 2011-09-12 22:08:00+0200
+#       + adding replacement options --forbid-root and --forbid-root-force
+#       - removing file sorting
+#       * fixing unexpected behaviour of filenames with special characters
+#         Many thanks to ubuntuusers.de member Lasall!
+#       * improving performance
+#       * improving code styling
+#   v1.4 - 2011-12-03 23:22:00+0100
+#       + adding DEPENDENCIES documentation category
+#       + adding KNOWN BUGS documentation category
+#       + adding EXIT CODES documentation category
+#       + implementing exit codes as bitmasks
+#       + adding function getOptionsAsCmdString()
+#       + detecting the renaming of `trash` to `trash-put`
+#       + reading paths of `rm` and `trash-put` from $PATH
+#       + checking for executability of `rm` and `trash-put`
+#       + printing `rm` and `trash-put` commands in verbose mode
+#       + catching errors of `trash-put`:
+#           - unable to create the trashcan
+#           - trying to trash the trashcan
+#       * improving error handling of `rm` executions
+#       * improving --one-file-system
+#       * improving --interactive
+#       * improving --force
+#       * fixing --preserve-root
+#       * fixing detection of . and .. directories
+#       * minor code improvements
+#   v1.6 - 2013-08-07 13:53:00+0200
+#       * minor code improvements
+#   v1.7 - 2013-11-29 21:49:00+0100
+#       + adding function showUsage()
+#       * moving --help and --version handling
+#       * improving documentation
 
 LC_ALL=C
 APP_NAME="$(basename "$0")"
 
-function showHelp() {
+function showUsage() {
 	echo "Usage:"
 	echo "  $APP_NAME [OPTION]... FILE..."
-	echo
-	echo "Put files (and directories) in trash using the \`$TRASH_CMD' command in a way"
-	echo "that is, otherwise as \`$TRASH_CMD' itself, compatible to GNUs \`rm'."
-	echo "  see $RM_CMD --help"
-	echo "  see $TRASH_CMD --help"
-	echo
-	echo "Help Options:"
-	echo "      --help                display this help and exit"
-	echo "      --version             output version information and exit"
-	echo
-	echo "Application Options:"
-	echo "  -f, --force               ignore nonexistent files, never prompt"
-	echo "  -i                        prompt before every removal"
-	echo "  -I                        prompt once before removing more than three files,"
-	echo "                              or when removing recursively.  Less intrusive"
-	echo "                              than -i, while still giving protection against"
-	echo "                              most mistakes"
-	echo "      --interactive[=WHEN]  prompt according to WHEN: never, once (-I), or"
-	echo "                              always (-i).  Without WHEN, prompt always"
-	echo "      --one-file-system     when removing a hierarchy recursively, skip any"
-	echo "                              directory that is on a file system different"
-	echo "                              from that of the corresponding command line"
-	echo "                              argument"
-	echo "      --no-preserve-root    do not treat \`/' specially"
-	echo "      --preserve-root       do not remove \`/' (default)"
-	echo "  -r, -R, --recursive       remove directories and their contents recursively"
-	echo "  -v, --verbose             explain what is being done"
-	echo
-	echo "Replacement options:"
-	echo "  These options are not supposed to be used when calling $APP_NAME, they help"
-	echo "  you to control how and in which cases \`rm' is replaced."
-	echo "      --forbid-root         forbid user \`root' to trash files.  When standard"
-	echo "                              input is a terminal, the user is asked to pass"
-	echo "                              the command to \`$RM_CMD', otherwise the entire"
-	echo "                              command is aborted"
-	echo "      --forbid-root-force   when user \`root' trys to trash files, the entire"
-	echo "                              command is automatically passed to \`$RM_CMD'."
-	echo
-	echo "By default, $APP_NAME does not remove directories.  Use the --recursive"
-	echo "(-r or -R) option to remove each listed directory, too, along with all of"
-	echo "its contents."
-	echo
-	echo "To remove a file whose name starts with a \`-', for example \`-foo', use one"
-	echo "of these commands:"
-	echo "  $APP_NAME -- -foo"
-	echo "  $APP_NAME ./-foo"
-	echo
-	echo "See also \`trash-list' (or \`list-trash'), \`trash-empty' (or \`empty-trash'),"
-	echo "\`restore-trash', \`trash-rm', and the FreeDesktop.org Trash Specification"
-	echo "at <http://www.ramendik.ru/docs/trashspec.html>."
-	echo
-	echo "Please report bugs using the contact form at <http://www.daniel-rudolf.de/>"
-	echo "Besides, you will find general help and information about $APP_NAME there."
-}
-
-function showVersion() {
-	echo "rmtrash 1.6 (build 20130807)"
-	echo "Copyright (C) 2011-2013 Daniel Rudolf"
-	echo "License GPLv3: GNU GPL version 3 only <http://gnu.org/licenses/gpl.html>."
-	echo "This is free software: you are free to change and redistribute it."
-	echo "There is NO WARRANTY, to the extent permitted by law."
-	echo
-	echo "Written by Daniel Rudolf <http://www.daniel-rudolf.de/>"
 }
 
 function getOptionsAsCmdString() {
@@ -276,7 +210,7 @@ fi
 
 # use getopt to parse parameters
 if ! OPTIONS="$(getopt -n "$APP_NAME" -o fiIrRv -l "force" -l "interactive::" -l "one-file-system" -l "no-preserve-root" -l "preserve-root" -l "recursive" -l "verbose" -l "forbid-root" -l "forbid-root-force" -l "help" -l "version" -- "$@")"; then
-	showHelp
+	showUsage
 	exit 2
 fi
 eval set -- "$OPTIONS"
@@ -367,12 +301,71 @@ while true; do
 			;;
 
 		"--help")
-			showHelp
+			showUsage
+			echo
+			echo "Put files (and directories) in trash using the \`$TRASH_CMD' command in a way"
+			echo "that is, otherwise as \`$TRASH_CMD' itself, compatible to GNUs \`rm'."
+			echo "  see $RM_CMD --help"
+			echo "  see $TRASH_CMD --help"
+			echo
+			echo "Help Options:"
+			echo "      --help                display this help and exit"
+			echo "      --version             output version information and exit"
+			echo
+			echo "Application Options:"
+			echo "  -f, --force               ignore nonexistent files, never prompt"
+			echo "  -i                        prompt before every removal"
+			echo "  -I                        prompt once before removing more than three files,"
+			echo "                              or when removing recursively.  Less intrusive"
+			echo "                              than -i, while still giving protection against"
+			echo "                              most mistakes"
+			echo "      --interactive[=WHEN]  prompt according to WHEN: never, once (-I), or"
+			echo "                              always (-i).  Without WHEN, prompt always"
+			echo "      --one-file-system     when removing a hierarchy recursively, skip any"
+			echo "                              directory that is on a file system different"
+			echo "                              from that of the corresponding command line"
+			echo "                              argument"
+			echo "      --no-preserve-root    do not treat \`/' specially"
+			echo "      --preserve-root       do not remove \`/' (default)"
+			echo "  -r, -R, --recursive       remove directories and their contents recursively"
+			echo "  -v, --verbose             explain what is being done"
+			echo
+			echo "Replacement options:"
+			echo "  These options are not supposed to be used when calling $APP_NAME, they help"
+			echo "  you to control how and in which cases \`rm' is replaced."
+			echo "      --forbid-root         forbid user \`root' to trash files.  When standard"
+			echo "                              input is a terminal, the user is asked to pass"
+			echo "                              the command to \`$RM_CMD', otherwise the entire"
+			echo "                              command is aborted"
+			echo "      --forbid-root-force   when user \`root' trys to trash files, the entire"
+			echo "                              command is automatically passed to \`$RM_CMD'."
+			echo
+			echo "By default, $APP_NAME does not remove directories.  Use the --recursive"
+			echo "(-r or -R) option to remove each listed directory, too, along with all of"
+			echo "its contents."
+			echo
+			echo "To remove a file whose name starts with a \`-', for example \`-foo', use one"
+			echo "of these commands:"
+			echo "  $APP_NAME -- -foo"
+			echo "  $APP_NAME ./-foo"
+			echo
+			echo "See also \`trash-list' (or \`list-trash'), \`trash-empty' (or \`empty-trash'),"
+			echo "\`restore-trash', \`trash-rm', and the FreeDesktop.org Trash Specification"
+			echo "at <http://www.ramendik.ru/docs/trashspec.html>."
+			echo
+			echo "Please report bugs using the contact form at <http://www.daniel-rudolf.de/>"
+			echo "Besides, you will find general help and information about $APP_NAME there."
 			exit 0
 			;;
 
 		"--version")
-			showVersion
+			echo "rmtrash 1.7 (build 20131129)"
+			echo "Copyright (C) 2011-2013 Daniel Rudolf"
+			echo "License GPLv3: GNU GPL version 3 only <http://gnu.org/licenses/gpl.html>."
+			echo "This is free software: you are free to change and redistribute it."
+			echo "There is NO WARRANTY, to the extent permitted by law."
+			echo
+			echo "Written by Daniel Rudolf <http://www.daniel-rudolf.de/>"
 			exit 0
 			;;
 
@@ -382,6 +375,7 @@ while true; do
 			;;
 
 		*)
+			showUsage
 			echo "$APP_NAME: execution of getopt failed" >&2
 			exit 2
 			;;
@@ -390,7 +384,8 @@ done
 
 # no arguments given
 if [ $# -eq 0 ]; then
-	showHelp
+	echo "$APP_NAME: too few arguments" >&2
+	showUsage
 	exit 2
 fi
 

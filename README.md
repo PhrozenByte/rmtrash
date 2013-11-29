@@ -1,4 +1,4 @@
-rmtrash 1.6
+rmtrash 1.7
 ===========
 Put files (and directories) in trash using the ```trash-put``` command in a way that is, otherwise as ```trash-put``` itself, compatible to GNUs ```rm``` and ```rmdir```.
 
