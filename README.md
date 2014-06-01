@@ -1,4 +1,4 @@
-rmtrash 1.7
+rmtrash 1.8
 ===========
 Put files (and directories) in trash using the ```trash-put``` command in a way that is, otherwise as ```trash-put``` itself, compatible to GNUs ```rm``` and ```rmdir```.
 
@@ -58,11 +58,10 @@ rmdirtrash [OPTION]... [DIRECTORY...]
   * ```-p```, ```--parents```: remove DIRECTORY and its ancestors; e.g., ```rmdirtrash -p a/b/c``` is similar to ```rmdirtrash a/b/c a/b a```
   * ```-v```, ```--verbose```: output a diagnostic for every directory processed
 
-Replacement options
--------------------
-These options are not supposed to be used when calling ```rmtrash``` resp. ```rmdirtrash```. They help you to control how and in which cases ```rm``` resp. ```rmdir``` are replaced.
-* ```--forbid-root```: forbid user ```root``` to trash files/directories. When standard input is a terminal, the user is asked to pass the command to ```rm``` resp. ```rmdir```, otherwise the entire command is aborted
-* ```--forbid-root-force```: when user ```root``` trys to trash files/directories, the entire command is passed automatically to ```rm``` resp. ```rmdir```
+Replacement option
+------------------
+This option is not supposed to be used when calling ```rmtrash``` resp. ```rmdirtrash```. It helps you to control how and in which cases ```rm``` resp. ```rmdir``` are replaced.
+* ```--forbid-root[=HOW]```: forbid user ```root``` to trash files.  When standard input is a terminal, ```ask-forbid``` and ```ask-pass``` will question the user to pass the command to ```/bin/rm```. When standard input is no terminal, ```ask-forbid``` will abort the command, whereas ```ask-pass``` will pass the command to ```/bin/rm```. Use ```pass``` to pass all commands of user ```root``` to ```/bin/rm```. If user ```root``` should never trash files, use ```always```. Without ```HOW```, ```ask-forbid``` is assumed
 
 Additional Notes
 ----------------
@@ -75,7 +74,7 @@ Typically you won't notice a time delay when using ```rmtrash``` and ```rmdirtra
 
 License & Copyright
 -------------------
-Copyright (C) 2011-2013  Daniel Rudolf <http://www.daniel-rudolf.de/>
+Copyright (C) 2011-2014  Daniel Rudolf <http://www.daniel-rudolf.de/>
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 3 of the License only.
 

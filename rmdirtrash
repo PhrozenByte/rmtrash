@@ -1,6 +1,6 @@
 #!/bin/bash
 # rmdirtrash - `rmdir' compatible layer for `trash'
-# Version 1.7 (build 20131129)
+# Version 1.8 (build 20140601)
 #
 #
 # SHORT DESCRIPTION:
@@ -10,7 +10,6 @@
 #
 # DEPENDENCIES:
 #   - `trash' or `trash-put', provided by the package `trash-cli'
-#   - `dpkg', provided by the package `dpkg'
 #
 #   Note that there are many more dependencies. Nearly every distribution meets
 #   those dependencies by default, so they are not listed here. Please also
@@ -18,8 +17,11 @@
 #   the POSIX standard. The extended variants provided by GNU are recommended.
 #
 #   This script was tested with Ubuntu 10.04 LTS (Lucid Lynx) and
-#   Ubuntu 12.04 LTS (Precise Pangolin) only. It SHOULD work great with all
-#   Debian-based distributions.
+#   Ubuntu 12.04 LTS (Precise Pangolin) only. It SHOULD work great with any
+#   other distribution.
+#
+#   You want to make rmtrash work with your favorite distribution?
+#   Go on, I appreciate it!
 #
 #
 # EXIT CODES:
@@ -47,6 +49,7 @@
 #    512  directory not empty
 #   1024  unable to create trashcan: permission denied
 #   2048  unable to trash the trashcan
+#   4096  user `root' isn't allowed to trash files
 #
 #
 # KNOWN BUGS:
@@ -60,7 +63,7 @@
 #
 #
 # COPYRIGHT AND LICENSING:
-#   Copyright (C) 2011-2013  Daniel Rudolf <http://www.daniel-rudolf.de/>
+#   Copyright (C) 2011-2014  Daniel Rudolf <http://www.daniel-rudolf.de/>
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -99,9 +102,16 @@
 #       + adding function showUsage()
 #       * moving --help and --version handling
 #       * improving documentation
+#   v1.8 - 2014-06-01 23:05:00+0200
+#       + add VERSION and BUILD variables
+#       * change --forbid-root handling
+#       * remove dpkg
 
 LC_ALL=C
 APP_NAME=$(basename "$0")
+
+VERSION="1.8"
+BUILD="20140601"
 
 function ShowUsage() {
 	echo "Usage:"
@@ -141,34 +151,18 @@ if [ ! -x "$RMDIR_CMD" ]; then
 	exit 4
 fi
 
-# check if trash-cli package is installed
-TRASH_PACKAGE_INFORMATION="$(dpkg -p trash-cli)"
-if [ "$?" -ne 0 ] || [ -z "$TRASH_PACKAGE_INFORMATION" ]; then
-	echo "$APP_NAME: This program requires a command line interface trashcan utility." >&2
-	echo "It seems that the required program is not installed yet.  You can catch up on" >&2
-	echo "that by typing:  sudo apt-get install trash-cli" >&2
-	exit 4
-fi
-
-# get version of the trash-cli package
-TRASH_VERSION="$(echo "$TRASH_PACKAGE_INFORMATION" | sed -n 's/^Version: \(.*\)/\1/p')"
-if [ -z "$TRASH_VERSION" ]; then
-	echo "$APP_NAME: Unable to determine version of the \`trash-cli' package." >&2
-	exit 4
-fi
-
 # get path of trash
-# the path depends on the installed version of the trash-cli package	
-dpkg --compare-versions "$TRASH_VERSION" "ge" "0.11"
-if [ "$?" -eq "0" ]; then
-	TRASH_CMD="$(which "trash-put")"
-else
+# the path depends on the installed version of the trash-cli package
+TRASH_CMD="$(which "trash-put")"
+if [ -z "$TRASH_CMD" ]; then
 	TRASH_CMD="$(which "trash")"
 fi
 
-# check if trash command is found
+# check if trasgh-cli is installed
 if [ -z "$TRASH_CMD" ]; then
-	echo "$APP_NAME: Unable to find the trashcan command within \$PATH." >&2
+	echo "$APP_NAME: command \`trash-put' was not found." >&2
+	echo "This program requires a command line interface trashcan utility." >&2
+	echo "It seems that the required program is not installed yet." >&2
 	exit 4
 fi
 
@@ -186,17 +180,17 @@ if [ $? -eq 0 ]; then
 fi
 
 # use getopt to parse parameters
-if ! OPTIONS=$(getopt -n "$APP_NAME" -o pv -l "ignore-fail-on-non-empty" -l "parents" -l "verbose" -l "forbid-root" -l "forbid-root-force" -l "help" -l "version" -- "$@"); then
+if ! OPTIONS=$(getopt -n "$APP_NAME" -o pv -l "ignore-fail-on-non-empty" -l "parents" -l "verbose" -l "forbid-root::" -l "forbid-root-force" -l "help" -l "version" -- "$@"); then
 	ShowUsage
 	exit 2
 fi
 eval set -- "${OPTIONS}"
 
 # default option values
-IGNORE_FAIL_ON_NON_EMPTY=false	# --ignore-fail-on-non-empty		bool
-PARENTS=false			# -p / --parents			bool
-VERBOSE=false			# -v / --verbose			bool
-FORBID_ROOT="no"		# --forbid-root / --forbid-root-force	string ( no / yes / force )
+IGNORE_FAIL_ON_NON_EMPTY=false	# --ignore-fail-on-non-empty    bool
+PARENTS=false					# -p / --parents                bool
+VERBOSE=false					# -v / --verbose                bool
+FORBID_ROOT="never"				# --forbid-root                 string ( always / ask-forbid / ask-pass / pass / never )
 
 # parse options
 while true; do
@@ -217,12 +211,34 @@ while true; do
 			;;
 
 		"--forbid-root")
-			FORBID_ROOT="yes"
-			shift
+			if [ "$2" == "always" ] || [ "$2" == "yes" ]; then
+				FORBID_ROOT="always"
+			elif [ "$2" == "ask-forbid" ] || [ -z "$2" ]; then
+				FORBID_ROOT="ask-forbid"
+			elif [ "$2" == "ask-pass" ]; then
+				FORBID_ROOT="ask-pass"
+			elif [ "$2" == "pass" ]; then
+				FORBID_ROOT="pass"
+			elif [ "$2" == "never" ] || [ "$2" == "no" ]; then
+				FORBID_ROOT="never"
+			else
+				echo "$APP_NAME: invalid argument \`$2' for \`--forbid-root'" >&2
+				echo "Valid arguments are:" >&2
+				echo "  - \`always', \`yes'" >&2
+				echo "  - \`ask-forbid'" >&2
+				echo "  - \`ask-pass'" >&2
+				echo "  - \`pass'" >&2
+				echo "  - \`never', \`no'" >&2
+				echo "Try \`$APP_NAME --help' for more information." >&2
+				exit 2
+			fi
+			
+			shift 2
 			;;
 
 		"--forbid-root-force")
-			FORBID_ROOT="force"
+			# backward compatibility
+			FORBID_ROOT="pass"
 			shift
 			;;
 
@@ -246,16 +262,20 @@ while true; do
 			echo "                    is similar to \`$APP_NAME a/b/c a/b a'"
 			echo "  -v, --verbose  output a diagnostic for every directory processed"
 			echo
-			echo "Replacement options:"
-			echo "  These options are not supposed to be used when calling $APP_NAME, they help"
-			echo "  you to control how and in which cases \`rmdir' is replaced."
-			echo "      --forbid-root         forbid user \`root' to trash directories.  When"
-			echo "                              standard input is a terminal, the user is asked"
-			echo "                              to pass the command to \`$RMDIR_CMD', otherwise"
-			echo "                              the entire command is aborted"
-			echo "      --forbid-root-force   when user \`root' trys to trash directories, the"
-			echo "                              entire command is automatically passed to"
-			echo "                              \`$RMDIR_CMD'."
+			echo "Replacement option:"
+			echo "  This option is not supposed to be used when calling $APP_NAME, it helps"
+			echo "  you to control how and in which cases \`rm' is replaced."
+			echo "      --forbid-root[=HOW]   forbid user \`root' to trash directories.  When"
+			echo "                              standard input is a terminal, \`ask-forbid'"
+			echo "                              and \`ask-pass' will question the user to"
+			echo "                              pass the command to \`$RMDIR_CMD'. When"
+			echo "                              standard input is no terminal, \`ask-forbid'"
+			echo "                              will abort the command, whereas \`ask-pass'"
+			echo "                              will pass the command to \`$RMDIR_CMD'."
+			echo "                              Use \`pass' to pass all commands of user \`root'"
+			echo "                              to \`$RMDIR_CMD'. If user \`root' should never"
+			echo "                              trash directories, use \`always'. Without HOW,"
+			echo "                              \`ask-forbid' is assumed"
 			echo
 			echo "To remove a directory whose name starts with a \`-', for example \`-foo', use"
 			echo "one of these commands:"
@@ -272,8 +292,8 @@ while true; do
 			;;
 
 		"--version")
-			echo "rmdirtrash 1.7 (build 20131129)"
-			echo "Copyright (C) 2011-2013 Daniel Rudolf"
+			echo "rmdirtrash $VERSION (build $BUILD)"
+			echo "Copyright (C) 2011-2014 Daniel Rudolf"
 			echo "License GPLv3: GNU GPL version 3 only <http://gnu.org/licenses/gpl.html>."
 			echo "This is free software: you are free to change and redistribute it."
 			echo "There is NO WARRANTY, to the extent permitted by law."
@@ -303,51 +323,62 @@ if [ $# -eq 0 ]; then
 fi
 
 # forbid root?
-if [ "$FORBID_ROOT" != "no" ] && [ $(id -u) -eq 0 ]; then
+if [ "$FORBID_ROOT" != "never" ] && [ "$(id -u)" -eq 0 ]; then
 	echo "$APP_NAME: user \`root' should never trash directories" >&2
+	
+	if [ "$FORBID_ROOT" == "always" ]; then
+		exit 4096
+	else
+		PASS_COMMAND=false
+		if [ "$FORBID_ROOT" == "ask-forbid" ] || [ "$FORBID_ROOT" == "ask-pass" ]; then
+			# prompt
+			if [ $SHELL_IN_INTERACTIVE_MODE == true ]; then
+				echo -n "pass entire command to \`$RMDIR_CMD' (delete arguments instead of trashing)? "
+				read PASS_COMMAND_ANSWER
 
-	PASS_COMMAND=false
-	if [ "$FORBID_ROOT" == "yes" ]; then
-		# prompt
-		if [ $SHELL_IN_INTERACTIVE_MODE == true ]; then
-			echo -n "pass entire command to \`$RMDIR_CMD' (delete arguments instead of trashing)? "
-			read PASS_COMMAND_ANSWER
-
-			if [ "$PASS_COMMAND_ANSWER" == "y" ] || [ "$PASS_COMMAND_ANSWER" == "yes" ]; then
-				PASS_COMMAND=true
+				if [ "$PASS_COMMAND_ANSWER" == "y" ] || [ "$PASS_COMMAND_ANSWER" == "yes" ]; then
+					PASS_COMMAND=true
+				fi
+			else
+				# shell is not running in interactive mode
+				if [ "$FORBID_ROOT" == "ask-forbid" ]; then
+					# unable to question user - forbid execution
+					exit 4096
+				else
+					# unable to question user - pass command
+					echo "$APP_NAME: entire command will be passed to \`$RMDIR_CMD'..."
+					PASS_COMMAND=true
+				fi
 			fi
 		else
-			# exit if shell is not running in interactive mode
-			exit 32
+			# pass always
+			PASS_COMMAND=true
+			echo "$APP_NAME: entire command will be passed to \`$RMDIR_CMD'..."
 		fi
-	else
-		# force
-		PASS_COMMAND=true
-		echo "$APP_NAME: entire command will be passed to \`$RMDIR_CMD'..."
-	fi
 
-	if [ $PASS_COMMAND == true ]; then
-		# create command
-		CMD="$RMDIR_CMD"
-		CMD_OPTIONS="$(getOptionsAsCmdString)"
-		CMD_ARGUMENTS=""
-		while [ $# -gt 0 ]; do
-			CMD_ARGUMENTS+=" \"$1\""
-			shift
-		done
+		if [ $PASS_COMMAND == true ]; then
+			# create command
+			CMD="$RMDIR_CMD"
+			CMD_OPTIONS="$(getOptionsAsCmdString)"
+			CMD_ARGUMENTS=""
+			while [ $# -gt 0 ]; do
+				CMD_ARGUMENTS+=" \"$1\""
+				shift
+			done
 
-		# execute command	
-		if [ $VERBOSE == true ]; then
-			echo "$APP_NAME: executing \`$CMD $CMD_OPTIONS ${CMD_ARGUMENTS:1}'"
+			# execute command	
+			if [ $VERBOSE == true ]; then
+				echo "$APP_NAME: executing \`$CMD $CMD_OPTIONS ${CMD_ARGUMENTS:1}'"
+			fi
+			eval "$CMD $CMD_OPTIONS ${CMD_ARGUMENTS:1}"
+			RMDIR_EXIT_STATUS=$?
+			
+			if [ "$RMDIR_EXIT_STATUS" -ne 0 ]; then
+				echo "$APP_NAME: execution of \`$RMDIR_CMD' failed (exit status $RMDIR_EXIT_STATUS)" >&2
+				exit 16
+			fi
+			exit 0
 		fi
-		eval "$CMD $CMD_OPTIONS ${CMD_ARGUMENTS:1}"
-		RMDIR_EXIT_STATUS=$?
-		
-		if [ "$RMDIR_EXIT_STATUS" -ne 0 ]; then
-			echo "$APP_NAME: execution of \`$RMDIR_CMD' failed (exit status $RMDIR_EXIT_STATUS)" >&2
-			exit 16
-		fi
-		exit 0
 	fi
 fi
 
