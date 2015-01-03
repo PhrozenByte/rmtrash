@@ -14,13 +14,13 @@ alias rm='rmtrash'
 alias rmdir='rmdirtrash'
 alias sudo='sudo '
 ```
-to your ```~/.bashrc``` (or ```~/.bash_aliases```). Consider adding the ```--forbid-root``` or ```--forbid-root-force``` option (see *replacement options* below)! The last line is optional, without you'll notice that ```rmtrash``` and ```rmdirtrash``` won't be called when using ```sudo```.
+to your ```~/.bashrc``` (or ```~/.bash_aliases```). Consider adding the ```--forbid-root``` option (see *replacement options* below)! The last line is optional, without you'll notice that ```rmtrash``` and ```rmdirtrash``` won't be called when using ```sudo```.
 
 Requirements
 ------------
-The packages ```trash-cli``` (to provide the ```trash``` or ```trash-put``` command) and ```dpkg``` are required. ```rmtrash``` and ```rmdirtrash``` were tested on Ubuntu Linux 10.04 LTS (Lucid Lynx) and Ubuntu Linux 12.04 LTS (Precise Pangolin) only, but it *should* work great on all other Debian-based distributions, too. It was written to work with ```bash```.
+Obviously  ```trash-cli``` (to provide the ```trash-put``` or ```trash``` command) is required. ```rmtrash``` and ```rmdirtrash``` were tested with Ubuntu Linux 10.04 LTS (Lucid Lynx) and Ubuntu Linux 12.04 LTS (Precise Pangolin) only, but it *should* work great with any other distribution, too. Anyway, if ```rmtrash``` or ```rmdirtrash``` doesn't work with your favourite distribution, please file a bug report. It was written to work with ```bash```.
 
-**You wanna make ```rmtrash``` and ```rmdirtrash``` work with your favorite distribution?** Go on, I appreciate it!
+**You wanna make ```rmtrash``` and ```rmdirtrash``` work with your favorite distribution or improve them in general?** Go on, I appreciate it!
 
 Usage of rmtrash
 ----------------
@@ -61,20 +61,20 @@ rmdirtrash [OPTION]... [DIRECTORY...]
 Replacement option
 ------------------
 This option is not supposed to be used when calling ```rmtrash``` resp. ```rmdirtrash```. It helps you to control how and in which cases ```rm``` resp. ```rmdir``` are replaced.
-* ```--forbid-root[=HOW]```: forbid user ```root``` to trash files.  When standard input is a terminal, ```ask-forbid``` and ```ask-pass``` will question the user to pass the command to ```/bin/rm```. When standard input is no terminal, ```ask-forbid``` will abort the command, whereas ```ask-pass``` will pass the command to ```/bin/rm```. Use ```pass``` to pass all commands of user ```root``` to ```/bin/rm```. If user ```root``` should never trash files, use ```always```. Without ```HOW```, ```ask-forbid``` is assumed
+* ```--forbid-root[=HOW]```: forbid user ```root``` to trash files.  When standard input is a terminal, ```ask-forbid``` and ```ask-pass``` will question the user to pass the command to ```/bin/rm```. When standard input is no terminal, ```ask-forbid``` will abort the command, whereas ```ask-pass``` will pass the command to ```/bin/rm```. Use ```pass``` to pass all commands of user ```root``` to ```/bin/rm``` without a query. If user ```root``` should never trash files, use ```always```. Without ```HOW```, ```ask-forbid``` is assumed
 
 Additional Notes
 ----------------
 For additional information see the ```trash-list``` (or ```list-trash```), ```trash-empty``` (or ```empty-trash```), ```restore-trash``` and ```trash-rm``` commands provided by ```trash-cli``` ([Homepage](https://github.com/andreafrancia/trash-cli)) as well as the [FreeDesktop.org Trash Specification](http://www.ramendik.ru/docs/trashspec.html). Note ```trash-put --help``` (or ```trash --help```) and ```rm --help```, too.
 
 **A important note about execution time:**
-```rmtrash``` is very slow! Because we're indexing all containing files before actually building the trash command (and because it's just a shell script), it is pretty slow when trashing many files. If you want to remove a very large directory (in terms of *many files*), consider using ```trash-put``` or ```rm``` directly. **Never** name ```rmtrash```s scriptfile ```rm``` - this will replace ```rm``` and is definitly not what you actually want! Use a bash alias as described above. The same applies to ```rmdirtrash```.
+```rmtrash``` is pretty slow! Because we're indexing all containing files before actually building the trash command (and because it's just a shell script), it is pretty slow when trashing many files. If you want to remove a very large directory (in terms of *many files*), consider using ```trash-put``` or ```rm``` directly. **Never** name ```rmtrash```s scriptfile ```rm``` - this will replace ```rm``` and is definitly not what you actually want! Use a bash alias as described above. The same applies to ```rmdirtrash```.
 
 Typically you won't notice a time delay when using ```rmtrash``` and ```rmdirtrash```, but now you know that there is a time delay...
 
 License & Copyright
 -------------------
-Copyright (C) 2011-2014  Daniel Rudolf <http://www.daniel-rudolf.de/>
+Copyright (C) 2011-2015  Daniel Rudolf <http://www.daniel-rudolf.de/>
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 3 of the License only.
 
