@@ -1,6 +1,6 @@
 #!/bin/bash
 # rmtrash - `rm' compatible layer for `trash'
-# Version 1.8 (build 20140601)
+# Version 1.9-SNAPSHOT (build 20150113)
 #
 #
 # SHORT DESCRIPTION:
@@ -58,12 +58,17 @@
 #       alias sudo='sudo '
 #   to the bashrc. Note the space before the closing quote. Consider the
 #   manpage of bash:
-#       "A trailing space in  value causes the next word to be checked for alias
-#       substitution when the alias is expanded."
+#       "A trailing space in  value causes the next word to be checked for
+#       alias substitution when the alias is expanded."
+#
+#
+# BUGS:
+#   Please report bugs using GitHub's issue tracker at
+#   <https://github.com/PhrozenByte/rmtrash>.
 #
 #
 # COPYRIGHT AND LICENSING:
-#   Copyright (C) 2011-2014  Daniel Rudolf <http://www.daniel-rudolf.de/>
+#   Copyright (C) 2011-2015  Daniel Rudolf <http://www.daniel-rudolf.de/>
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -76,6 +81,14 @@
 #
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#
+# SEE ALSO:
+#   trash(1), trash-put(1), trash-list(1), list-trash(1), trash-empty(1),
+#   empty-trash(1), trash-restore(1), trash-rm(1), the trash-cli project at
+#   <https://github.com/andreafrancia/trash-cli>, the FreeDesktop.org Trash
+#   Specification at <http://www.ramendik.ru/docs/trashspec.html> and the
+#   rmtrash project at <https://github.com/PhrozenByte/rmtrash>
 #
 #
 # CHANGELOG:
@@ -121,12 +134,15 @@
 #       + add VERSION and BUILD variables
 #       * change --forbid-root handling
 #       * remove dpkg
+#   v1.9-SNAPSHOT (not yet released)
+#       * documentation update
+#       * set default of --forbid-root to the documented `ask-forbid'
 
 LC_ALL=C
 APP_NAME="$(basename "$0")"
 
-VERSION="1.8"
-BUILD="20140601"
+VERSION="1.9-SNAPSHOT"
+BUILD="20150113"
 
 function showUsage() {
 	echo "Usage:"
@@ -216,7 +232,7 @@ ONE_FILE_SYSTEM=false	# --one-file-system                     boolean
 PRESERVE_ROOT=true		# --preserve-root / --no-preserve-root  boolean
 RECURSIVE=false			# -r / -R / --recursive                 boolean
 VERBOSE=false			# -v / --verbose                        boolean
-FORBID_ROOT="never"		# --forbid-root                         string ( always / ask-forbid / ask-pass / pass / never )
+FORBID_ROOT="ask-pass"	# --forbid-root                         string ( always / ask-forbid / ask-pass / pass / never )
 
 # parse options
 while true; do
@@ -319,8 +335,9 @@ while true; do
 		"--help")
 			showUsage
 			echo
-			echo "Put files (and directories) in trash using the \`$TRASH_CMD' command in a way"
-			echo "that is, otherwise as \`$TRASH_CMD' itself, compatible to GNUs \`rm'."
+			echo "Put files (and directories) in trash using the \`$TRASH_CMD' command in"
+			echo "a way that is, otherwise as \`$TRASH_CMD' itself, compatible to"
+			echo "GNUs \`rm'."
 			echo "  see $RM_CMD --help"
 			echo "  see $TRASH_CMD --help"
 			echo
@@ -347,8 +364,8 @@ while true; do
 			echo "  -v, --verbose             explain what is being done"
 			echo
 			echo "Replacement option:"
-			echo "  This option is not supposed to be used when calling $APP_NAME, it helps"
-			echo "  you to control how and in which cases \`rm' is replaced."
+			echo "  This option is not supposed to be used when calling $APP_NAME, it helps you"
+			echo "  to control how and in which cases \`rm' is replaced."
 			echo "      --forbid-root[=HOW]   forbid user \`root' to trash files.  When standard"
 			echo "                              input is a terminal, \`ask-forbid' and \`ask-pass'"
 			echo "                              will question the user to pass the command to"
@@ -356,9 +373,9 @@ while true; do
 			echo "                              \`ask-forbid' will abort the command, whereas"
 			echo "                              \`ask-pass' will pass the command to \`$RM_CMD'."
 			echo "                              Use \`pass' to pass all commands of user \`root'"
-			echo "                              to \`$RM_CMD'. If user \`root' should never"
-			echo "                              trash files, use \`always'. Without HOW,"
-			echo "                              \`ask-forbid' is assumed"
+			echo "                              to \`$RM_CMD'. If user \`root' should never trash"
+			echo "                              files, use \`always'. Without HOW, \`ask-forbid'"
+			echo "                              is assumed"
 			echo
 			echo "By default, $APP_NAME does not remove directories.  Use the --recursive"
 			echo "(-r or -R) option to remove each listed directory, too, along with all of"
@@ -370,22 +387,23 @@ while true; do
 			echo "  $APP_NAME ./-foo"
 			echo
 			echo "See also \`trash-list' (or \`list-trash'), \`trash-empty' (or \`empty-trash'),"
-			echo "\`restore-trash', \`trash-rm', and the FreeDesktop.org Trash Specification"
-			echo "at <http://www.ramendik.ru/docs/trashspec.html>."
+			echo "\`trash-restore' (or \`restore-trash'), \`trash-rm', and the FreeDesktop.org"
+			echo "Trash Specification at <http://www.ramendik.ru/docs/trashspec.html>."
 			echo
-			echo "Please report bugs using the contact form at <http://www.daniel-rudolf.de/>"
+			echo "Please report bugs using GitHub at <https://github.com/PhrozenByte/rmtrash>."
 			echo "Besides, you will find general help and information about $APP_NAME there."
 			exit 0
 			;;
 
 		"--version")
 			echo "rmtrash $VERSION (build $BUILD)"
-			echo "Copyright (C) 2011-2014 Daniel Rudolf"
+			echo "Copyright (C) 2011-2015 Daniel Rudolf"
 			echo "License GPLv3: GNU GPL version 3 only <http://gnu.org/licenses/gpl.html>."
 			echo "This is free software: you are free to change and redistribute it."
 			echo "There is NO WARRANTY, to the extent permitted by law."
 			echo
 			echo "Written by Daniel Rudolf <http://www.daniel-rudolf.de/>"
+			echo "See also: <https://github.com/PhrozenByte/rmtrash>"
 			exit 0
 			;;
 
