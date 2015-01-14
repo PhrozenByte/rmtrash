@@ -373,8 +373,9 @@ while true; do
 			echo "                              \`ask-pass' will pass the command to \`$RM_CMD'."
 			echo "                              Use \`pass' to pass all commands of user \`root'"
 			echo "                              to \`$RM_CMD'. If user \`root' should never trash"
-			echo "                              files, use \`always'. Without HOW, \`ask-forbid'"
-			echo "                              is assumed"
+			echo "                              files, use \`always'. In contrast, \`never' treats"
+			echo "                              \`root' in no special way. Without HOW,"
+			echo "                              \`ask-forbid' is assumed"
 			echo
 			echo "By default, $APP_NAME does not remove directories.  Use the --recursive"
 			echo "(-r or -R) option to remove each listed directory, too, along with all of"

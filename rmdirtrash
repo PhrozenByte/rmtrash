@@ -290,7 +290,8 @@ while true; do
 			echo "                              command to \`$RMDIR_CMD'.  Use \`pass' to pass"
 			echo "                              all commands of user \`root' to \`$RMDIR_CMD'."
 			echo "                              If user \`root' should never trash directories,"
-			echo "                              use \`always'. Without HOW, \`ask-forbid' is"
+			echo "                              use \`always'. In contrast, \`never' treats \`root'"
+			echo "                              in no special way. Without HOW, \`ask-forbid' is"
 			echo "                              assumed"
 			echo
 			echo "To remove a directory whose name starts with a \`-', for example \`-foo', use"
