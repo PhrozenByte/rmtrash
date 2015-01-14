@@ -332,19 +332,20 @@ while true; do
 			;;
 
 		"--help")
+		    TRASH_CMD_NAME="$(basename "$TRASH_CMD")"
+		    
 			showUsage
 			echo
-			echo "Put files (and directories) in trash using the \`$TRASH_CMD' command in"
-			echo "a way that is, otherwise as \`$TRASH_CMD' itself, compatible to"
-			echo "GNUs \`rm'."
+			echo "Put files (and directories) in trash using the \`$TRASH_CMD_NAME' command in a way"
+			echo "that is, otherwise as \`$TRASH_CMD_NAME' itself, compatible to GNUs \`rm'."
 			echo "  see $RM_CMD --help"
 			echo "  see $TRASH_CMD --help"
 			echo
-			echo "Help Options:"
+			echo "Help options:"
 			echo "      --help                display this help and exit"
 			echo "      --version             output version information and exit"
 			echo
-			echo "Application Options:"
+			echo "Application options:"
 			echo "  -f, --force               ignore nonexistent files, never prompt"
 			echo "  -i                        prompt before every removal"
 			echo "  -I                        prompt once before removing more than three files,"
@@ -364,7 +365,8 @@ while true; do
 			echo
 			echo "Replacement option:"
 			echo "  This option is not supposed to be used when calling $APP_NAME, it helps you"
-			echo "  to control how and in which cases \`rm' is replaced."
+			echo "  to control how and in which cases \`rm' is replaced.  If you don't set this"
+			echo "  option, \`root' isn't treated specially."
 			echo "      --forbid-root[=HOW]   forbid user \`root' to trash files.  When standard"
 			echo "                              input is a terminal, \`ask-forbid' and \`ask-pass'"
 			echo "                              will question the user to pass the command to"

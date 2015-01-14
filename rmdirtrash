@@ -128,7 +128,7 @@ APP_NAME=$(basename "$0")
 VERSION="1.9-SNAPSHOT"
 BUILD="20150113"
 
-function ShowUsage() {
+function showUsage() {
 	echo "Usage:"
 	echo "  $APP_NAME [OPTION]... DIRECTORY..."
 }
@@ -196,7 +196,7 @@ fi
 
 # use getopt to parse parameters
 if ! OPTIONS=$(getopt -n "$APP_NAME" -o pv -l "ignore-fail-on-non-empty" -l "parents" -l "verbose" -l "forbid-root::" -l "forbid-root-force" -l "help" -l "version" -- "$@"); then
-	ShowUsage
+	showUsage
 	exit 2
 fi
 eval set -- "${OPTIONS}"
@@ -258,18 +258,20 @@ while true; do
 			;;
 
 		"--help")
-			ShowUsage
+			TRASH_CMD_NAME="$(basename "$TRASH_CMD")"
+			
+			showUsage
 			echo
-			echo "Put empty directories in trash using the \`$TRASH_CMD' command in a way"
-			echo "that is, otherwise as \`$TRASH_CMD' itself, compatible to GNUs \`rmdir'."
+			echo "Put empty directories in trash using the \`$TRASH_CMD_NAME' command in a way that is,"
+			echo "otherwise as \`$TRASH_CMD_NAME' itself, compatible to GNUs \`rmdir'."
 			echo "  see $RMDIR_CMD --help"
 			echo "  see $TRASH_CMD --help"
 			echo
-			echo "Help Options:"
+			echo "Help options:"
 			echo "      --help                display this help and exit"
 			echo "      --version             output version information and exit"
 			echo
-			echo "Application Options:"
+			echo "Application options:"
 			echo "      --ignore-fail-on-non-empty"
 			echo "                 ignore each failure that is solely because a directory"
 			echo "                    is non-empty"
@@ -280,8 +282,9 @@ while true; do
 			echo
 			echo "Replacement option:"
 			echo "  This option is not supposed to be used when calling $APP_NAME, it helps you"
-			echo "  to control how and in which cases \`rm' is replaced."
-			echo "      --forbid-root[=HOW]   forbid user \`root' to trash directories.  When...."
+			echo "  to control how and in which cases \`rm' is replaced.  If you don't set this"
+			echo "  option, \`root' isn't treated specially."
+			echo "      --forbid-root[=HOW]   forbid user \`root' to trash directories.  When"
 			echo "                              standard input is a terminal, \`ask-forbid' and"
 			echo "                              \`ask-pass' will question the user to pass the"
 			echo "                              command to \`$RMDIR_CMD'. When standard input is"
@@ -327,7 +330,7 @@ while true; do
 
 		*)
 			echo "$APP_NAME: execution of getopt failed" >&2
-			ShowUsage
+			showUsage
 			exit 2
 			;;
 	esac
