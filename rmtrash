@@ -136,7 +136,6 @@
 #       * remove dpkg
 #   v1.9-SNAPSHOT (not yet released)
 #       * documentation update
-#       * set default of --forbid-root to the documented `ask-forbid'
 
 LC_ALL=C
 APP_NAME="$(basename "$0")"
@@ -232,7 +231,7 @@ ONE_FILE_SYSTEM=false	# --one-file-system                     boolean
 PRESERVE_ROOT=true		# --preserve-root / --no-preserve-root  boolean
 RECURSIVE=false			# -r / -R / --recursive                 boolean
 VERBOSE=false			# -v / --verbose                        boolean
-FORBID_ROOT="ask-pass"	# --forbid-root                         string ( always / ask-forbid / ask-pass / pass / never )
+FORBID_ROOT="never" 	# --forbid-root                         string ( always / ask-forbid / ask-pass / pass / never )
 
 # parse options
 while true; do

@@ -60,7 +60,7 @@ rmdirtrash [OPTION]... [DIRECTORY...]
 
 Replacement option
 ------------------
-This option is not supposed to be used when calling ```rmtrash``` resp. ```rmdirtrash```. It helps you to control how and in which cases ```rm``` resp. ```rmdir``` are replaced.
+This option is not supposed to be used when calling ```rmtrash``` resp. ```rmdirtrash```. It helps you to control how and in which cases ```rm``` resp. ```rmdir``` are replaced. Withouth ```--forbid-root```, ```root``` isn't treaded specially (same as ```--forbid-root=never```).
 * ```--forbid-root[=HOW]```: forbid user ```root``` to trash files.  When standard input is a terminal, ```ask-forbid``` and ```ask-pass``` will question the user to pass the command to ```/bin/rm```. When standard input is no terminal, ```ask-forbid``` will abort the command, whereas ```ask-pass``` will pass the command to ```/bin/rm```. Use ```pass``` to pass all commands of user ```root``` to ```/bin/rm``` without a query. If user ```root``` should never trash files, use ```always```. Without ```HOW```, ```ask-forbid``` is assumed
 
 Additional Notes
