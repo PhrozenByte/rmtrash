@@ -65,7 +65,7 @@ This option is not supposed to be used when calling ```rmtrash``` resp. ```rmdir
 
 Additional Notes
 ----------------
-For additional information see the ```trash-list``` (or ```list-trash```), ```trash-empty``` (or ```empty-trash```), ```restore-trash``` and ```trash-rm``` commands provided by ```trash-cli``` ([Homepage](https://github.com/andreafrancia/trash-cli)) as well as the [FreeDesktop.org Trash Specification](http://www.ramendik.ru/docs/trashspec.html). Note ```trash-put --help``` (or ```trash --help```) and ```rm --help```, too.
+For additional information see the ```trash-list``` (or ```list-trash```), ```trash-empty``` (or ```empty-trash```), ```trash-restore``` (or ```restore-trash```) and ```trash-rm``` commands provided by ```trash-cli``` ([Homepage](https://github.com/andreafrancia/trash-cli)) as well as the [FreeDesktop.org Trash Specification](http://www.ramendik.ru/docs/trashspec.html). Note ```trash-put --help``` (or ```trash --help```) and ```rm --help```, too.
 
 **A important note about execution time:**
 ```rmtrash``` is pretty slow! Because we're indexing all containing files before actually building the trash command (and because it's just a shell script), it is pretty slow when trashing many files. If you want to remove a very large directory (in terms of *many files*), consider using ```trash-put``` or ```rm``` directly. **Never** name ```rmtrash```s scriptfile ```rm``` - this will replace ```rm``` and is definitly not what you actually want! Use a bash alias as described above. The same applies to ```rmdirtrash```.
