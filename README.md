@@ -14,11 +14,11 @@ alias rm='rmtrash'
 alias rmdir='rmdirtrash'
 alias sudo='sudo '
 ```
-to your ```~/.bashrc``` (or ```~/.bash_aliases```). Consider adding the ```--forbid-root``` option (see *replacement options* below)! The last line is optional, without you'll notice that ```rmtrash``` and ```rmdirtrash``` won't be called when using ```sudo```.
+to your ```~/.bashrc``` (or ```~/.bash_aliases```). Consider adding the ```--forbid-root``` option (see *replacement option* below)! The last line is optional, without you'll notice that ```rmtrash``` and ```rmdirtrash``` won't be called when using ```sudo```.
 
 Requirements
 ------------
-Obviously  ```trash-cli``` (to provide the ```trash-put``` or ```trash``` command) is required. ```rmtrash``` and ```rmdirtrash``` were tested with Ubuntu Linux 10.04 LTS (Lucid Lynx) and Ubuntu Linux 12.04 LTS (Precise Pangolin) only, but it *should* work great with any other distribution, too. Anyway, if ```rmtrash``` or ```rmdirtrash``` doesn't work with your favourite distribution, please file a bug report. It was written to work with ```bash```.
+Obviously  ```trash-cli``` (to provide the ```trash-put``` or ```trash``` command) is required. ```rmtrash``` and ```rmdirtrash``` were tested with Ubuntu Linux 10.04 LTS (Lucid Lynx), Ubuntu Linux 12.04 LTS (Precise Pangolin) and Debian 8 (Jessie) only, but it *should* work great with any other distribution, too. Anyway, if ```rmtrash``` or ```rmdirtrash``` doesn't work with your favourite distribution, please file a bug report. It was written to work with ```bash```.
 
 **You wanna make ```rmtrash``` and ```rmdirtrash``` work with your favorite distribution or improve them in general?** Go on, I appreciate it!
 
