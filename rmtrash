@@ -549,7 +549,7 @@ if [ "$ARGUMENT" != "/" ]; then
 	fi
 else
 	# you can't remove /
-	if [ $RECURSIVE == true ] && [ $PRESERVE_ROOT == true]; then
+	if [ $RECURSIVE == true ] && [ $PRESERVE_ROOT == true ]; then
 		echo "$APP_NAME: cannot remove root directory \`/'" >&2
 		exit 64
 	fi
