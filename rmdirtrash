@@ -577,7 +577,7 @@ if [ ${#DELETE_DIRECTORIES[@]} -gt 0 ]; then
 	# catch some special errors
 	if [ -n "$STDOUT" ]; then
 		# unable to create trashcan (permission denied)
-		while [ true ]; do
+		while true; do
 			# get insufficient trashcan
 			INSUFFICIENT_TRASHCAN="$(echo "$STDOUT" | grep -m 1 -b -oP "(?<=^OSError: \[Errno 13\] Permission denied: ')([^\0]*?)/\.Trash-([0-9]+?)(?='$)")"
 			if [ -n "$INSUFFICIENT_TRASHCAN" ]; then
@@ -659,7 +659,7 @@ if [ ${#DELETE_DIRECTORIES[@]} -gt 0 ]; then
 		done
 		
 		# you can't trash the trashcan
-		while [ true ]; do
+		while true; do
 			# get delete argument
 			DELETE_ARGUMENT="$(echo "$STDOUT" | grep -m 1 -b -oP "(?<=^shutil\.Error: Cannot move a directory ')([^\0]+?)(?=' into itself '([^\0]+?)'\.$)")"
 			if [ -n "$DELETE_ARGUMENT" ]; then
