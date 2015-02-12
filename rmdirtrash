@@ -121,6 +121,7 @@
 #       * remove dpkg
 #   v1.9-SNAPSHOT (not yet released)
 #       * documentation update
+#       * code cleanup
 
 LC_ALL=C
 APP_NAME=$(basename "$0")
