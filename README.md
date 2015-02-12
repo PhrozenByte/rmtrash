@@ -1,5 +1,5 @@
-rmtrash 1.9-SNAPSHOT
-====================
+rmtrash 1.9
+===========
 Put files (and directories) in trash using the ```trash-put``` command in a way that is, otherwise as ```trash-put``` itself, compatible to GNUs ```rm``` and ```rmdir```.
 
 [Click here for more information about trash-cli.](https://github.com/andreafrancia/trash-cli)

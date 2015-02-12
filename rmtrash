@@ -1,6 +1,6 @@
 #!/bin/bash
 # rmtrash - `rm' compatible layer for `trash'
-# Version 1.9-SNAPSHOT (build 20150113)
+# Version 1.9 (build 20150212)
 #
 #
 # SHORT DESCRIPTION:
@@ -134,7 +134,7 @@
 #       + add VERSION and BUILD variables
 #       * change --forbid-root handling
 #       * remove dpkg
-#   v1.9-SNAPSHOT (not yet released)
+#   v1.9 - 2015-02-12 11:50:00+0100
 #       * documentation update
 #       * fixing --preserve-root
 #       * code cleanup
@@ -142,8 +142,8 @@
 LC_ALL=C
 APP_NAME="$(basename "$0")"
 
-VERSION="1.9-SNAPSHOT"
-BUILD="20150113"
+VERSION="1.9"
+BUILD="20150212"
 
 function showUsage() {
 	echo "Usage:"
