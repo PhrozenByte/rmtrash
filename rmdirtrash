@@ -42,7 +42,7 @@
 #
 #      8  `trash-put` returned a nonzero exit status
 #     16  `rm` returned a nonzero exit status
-#     32  user interaction requiered in non-interactive mode
+#     32  user interaction required in non-interactive mode
 #     64  cannot remove . or ..
 #    128  no such file or directory
 #    256  not a directory
@@ -107,9 +107,9 @@
 #       + reading paths of `rm` and `trash-put` from $PATH
 #       + checking for executability of `rm` and `trash-put`
 #       * minor code improvements
-#   v1.5 - skipped to sync version numbering with rmtrash
+#   v1.5 - no changes
 #   v1.6 - 2013-08-07 14:57:00+0200
-#	+ adapting some new features of rmtrash 1.4
+#       + adapting some new features of rmtrash 1.4
 #       * minor code improvements
 #   v1.7 - 2013-11-29 22:54:00+0100
 #       + adding function showUsage()
@@ -122,6 +122,7 @@
 #   v1.9 - 2015-02-12 11:50:00+0100
 #       * documentation update
 #       * code cleanup
+#   v1.10 - no changes
 
 LC_ALL=C
 APP_NAME=$(basename "$0")
@@ -206,7 +207,7 @@ eval set -- "${OPTIONS}"
 IGNORE_FAIL_ON_NON_EMPTY=false	# --ignore-fail-on-non-empty    bool
 PARENTS=false					# -p / --parents                bool
 VERBOSE=false					# -v / --verbose                bool
-FORBID_ROOT="never"			    # --forbid-root                 string ( always / ask-forbid / ask-pass / pass / never )
+FORBID_ROOT="never"				# --forbid-root                 string ( always / ask-forbid / ask-pass / pass / never )
 
 # parse options
 while true; do

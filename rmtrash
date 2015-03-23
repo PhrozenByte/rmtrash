@@ -42,7 +42,7 @@
 #
 #      8  `trash-put` returned a nonzero exit status
 #     16  `rm` returned a nonzero exit status
-#     32  user interaction requiered in non-interactive mode
+#     32  user interaction required in non-interactive mode
 #     64  cannot remove /
 #    128  cannot remove . or ..
 #    256  no such file or directory
@@ -138,8 +138,9 @@
 #       * documentation update
 #       * fixing --preserve-root
 #       * code cleanup
-#   v1.10
+#   v1.10 - 2015-03-24 00:40:00+0100
 #       + adding -d/--dir option (remove empty directory)
+#       * updating some output messages
 
 LC_ALL=C
 APP_NAME="$(basename "$0")"
@@ -344,8 +345,8 @@ while true; do
 			;;
 
 		"--help")
-		    TRASH_CMD_NAME="$(basename "$TRASH_CMD")"
-		    
+			TRASH_CMD_NAME="$(basename "$TRASH_CMD")"
+
 			showUsage
 			echo
 			echo "Put files (and directories) in trash using the \`$TRASH_CMD_NAME' command in a way"
