@@ -122,7 +122,8 @@
 #   v1.9 - 2015-02-12 11:50:00+0100
 #       * documentation update
 #       * code cleanup
-#   v1.10 - no changes
+#   v1.10 - 2015-03-24 00:40:00+0100
+#       * updating some output messages
 
 LC_ALL=C
 APP_NAME=$(basename "$0")
@@ -439,12 +440,8 @@ fi
 
 # you can't remove . or ..
 ARGUMENT_BASENAME="$(basename "$ARGUMENT")"
-if [ "$ARGUMENT" == "." ] || [ "$ARGUMENT" == ".." ]; then
-	echo "$APP_NAME: cannot remove directory \`$ARGUMENT'" >&2
-	exit 64
-fi
 if [ "$ARGUMENT_BASENAME" == "." ] || [ "$ARGUMENT_BASENAME" == ".." ]; then
-	echo "$APP_NAME: cannot remove \`$ARGUMENT_BASENAME' directory \`$ARGUMENT'" >&2
+	echo "$APP_NAME: refusing to remove \`.' or \`..' directory: skipping \`$ARGUMENT'" >&2
 	exit 64
 fi
 
