@@ -46,7 +46,7 @@
 #     64  cannot remove /
 #    128  cannot remove . or ..
 #    256  no such file or directory
-#    512  cannot remove directorys in non-recursive-mode
+#    512  cannot remove non-empty directory (recursive mode required)
 #   1024  unable to create trashcan: permission denied
 #   2048  unable to trash the trashcan
 #   4096  user `root' isn't allowed to trash files
@@ -138,6 +138,8 @@
 #       * documentation update
 #       * fixing --preserve-root
 #       * code cleanup
+#   v1.10
+#       + adding -d/--dir option (remove empty directory)
 
 LC_ALL=C
 APP_NAME="$(basename "$0")"
@@ -220,7 +222,7 @@ if [ $? -eq 0 ]; then
 fi
 
 # use getopt to parse parameters
-if ! OPTIONS="$(getopt -n "$APP_NAME" -o fiIrRv -l "force" -l "interactive::" -l "one-file-system" -l "no-preserve-root" -l "preserve-root" -l "recursive" -l "verbose" -l "forbid-root::" -l "forbid-root-force" -l "help" -l "version" -- "$@")"; then
+if ! OPTIONS="$(getopt -n "$APP_NAME" -o fiIdrRv -l "force" -l "interactive::" -l "one-file-system" -l "no-preserve-root" -l "preserve-root" -l "dir" -l "recursive" -l "verbose" -l "forbid-root::" -l "forbid-root-force" -l "help" -l "version" -- "$@")"; then
 	showUsage
 	exit 2
 fi
@@ -231,6 +233,7 @@ FORCE=false				# -f / --force                          boolean
 INTERACTIVE="default"	# -i / -I / --interactive               string ( default / never / once / always )
 ONE_FILE_SYSTEM=false	# --one-file-system                     boolean
 PRESERVE_ROOT=true		# --preserve-root / --no-preserve-root  boolean
+RMDIR_MODE=false		# -d / --dir                            boolean
 RECURSIVE=false			# -r / -R / --recursive                 boolean
 VERBOSE=false			# -v / --verbose                        boolean
 FORBID_ROOT="never" 	# --forbid-root                         string ( always / ask-forbid / ask-pass / pass / never )
@@ -291,8 +294,15 @@ while true; do
 			shift
 			;;
 
+		"-d"|"--dir")
+			RECURSIVE=false
+			RMDIR_MODE=true
+			shift
+			;;
+
 		"-r"|"-R"|"--recursive")
 			RECURSIVE=true
+			RMDIR_MODE=false
 			shift
 			;;
 
@@ -363,6 +373,7 @@ while true; do
 			echo "      --no-preserve-root    do not treat \`/' specially"
 			echo "      --preserve-root       do not remove \`/' (default)"
 			echo "  -r, -R, --recursive       remove directories and their contents recursively"
+			echo "  -d, --dir                 remove empty directories"
 			echo "  -v, --verbose             explain what is being done"
 			echo
 			echo "Replacement option:"
@@ -606,8 +617,17 @@ while [ $INDEX -lt $MAX ]; do
 
 	# delete a directory
 	if [ -d "$FILE" ] && [ ! -h "$FILE" ]; then
-		# deleting directories is only allowed in recursive mode
-		if [ $RECURSIVE == false ]; then
+		# deleting non-empty directories is only allowed in recursive mode,
+		# deleting empty directories in rmdir mode
+		if [ $RMDIR_MODE == true ]; then
+			if [ -z "$(find "$ARGUMENT" -maxdepth 0 -empty)" ]; then
+				echo "$APP_NAME: cannot remove \`$ARGUMENT': Directory not empty" >&2
+				EXIT=$(( $EXIT | 512 ))
+				let "INDEX++"
+				continue
+			fi
+
+		elif [ $RECURSIVE == false ]; then
 			echo "$APP_NAME: cannot remove \`$FILENAME': Is a directory" >&2
 			EXIT=$(( $EXIT | 512 ))
 			let "INDEX++"
