@@ -40,6 +40,7 @@ rmtrash [OPTION]... [FILE...]
   * ```--one-file-system```: when removing a hierarchy recursively, skip any directory that is on a file system different from that of the corresponding command line argument
   * ```--no-preserve-root```: do not treat ```/``` specially
   * ```--preserve-root```: do not remove ```/``` (default)
+  * ```-d```, ```--dir```: remove empty directories
   * ```-r```, ```-R```, ```--recursive```: remove directories and their contents recursively
   * ```-v```, ```--verbose```: explain what is being done
 
