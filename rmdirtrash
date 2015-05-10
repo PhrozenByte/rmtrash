@@ -453,7 +453,7 @@ else
 fi
 
 # no such file or directory
-if [ ! -e "$DIRECTORY" ]; then
+if [ ! -h "$ARGUMENT" ] && [ ! -e "$ARGUMENT" ]; then
 	echo "$APP_NAME: failed to remove \`$ARGUMENT': No such file or directory" >&2
 	exit 128
 fi
