@@ -1,15 +1,15 @@
 #!/bin/bash
-# rmtrash - `rm' compatible layer for `trash'
+# rmtrash - `rm` compatible layer for `trash`
 # Version 1.10 (build 20150324)
 #
 #
 # SHORT DESCRIPTION:
-#   Put files (and directories) in trash using the `trash' command in a way
-#   that is, otherwise as `trash' itself, compatible to GNUs `rm'.
+#   Put files (and directories) in trash using the `trash` command in a way
+#   that is, otherwise as `trash` itself, compatible to GNUs `rm`.
 #
 #
 # DEPENDENCIES:
-#   - `trash' or `trash-put', provided by the package `trash-cli'
+#   - `trash` or `trash-put`, provided by the package `trash-cli`
 #
 #   Note that there are many more dependencies. Nearly every distribution meets
 #   those dependencies by default, so they are not listed here. Please also
@@ -49,7 +49,7 @@
 #    512  cannot remove non-empty directory (recursive mode required)
 #   1024  unable to create trashcan: permission denied
 #   2048  unable to trash the trashcan
-#   4096  user `root' isn't allowed to trash files
+#   4096  user root isn't allowed to trash files
 #
 #
 # KNOWN BUGS:
@@ -186,13 +186,13 @@ RM_CMD="$(which "rm")"
 
 # check if rm is installed
 if [ -z "$RM_CMD" ]; then
-	echo "$APP_NAME: command \`rm' was not found." >&2
+	echo "$APP_NAME: command \`rm\` was not found." >&2
 	exit 4
 fi
 
 # check if rm is executable
 if [ ! -x "$RM_CMD" ]; then
-	echo "$APP_NAME: \`$RM_CMD' is not executable." >&2
+	echo "$APP_NAME: \`$RM_CMD\` is not executable." >&2
 	exit 4
 fi
 
@@ -205,7 +205,7 @@ fi
 
 # check if trasgh-cli is installed
 if [ -z "$TRASH_CMD" ]; then
-	echo "$APP_NAME: command \`trash-put' was not found." >&2
+	echo "$APP_NAME: command \`trash-put\` was not found." >&2
 	echo "This program requires a command line interface trashcan utility." >&2
 	echo "It seems that the required program is not installed yet." >&2
 	exit 4
@@ -213,7 +213,7 @@ fi
 
 # check if trash is executable
 if [ ! -x "$TRASH_CMD" ]; then
-	echo "$APP_NAME: \`$TRASH_CMD' is not executable." >&2
+	echo "$APP_NAME: \`$TRASH_CMD\` is not executable." >&2
 	exit 4
 fi
 
@@ -261,12 +261,12 @@ while true; do
 				elif [ "$2" == "always" ] || [ "$2" == "yes" ] || [ -z "$2" ]; then
 					INTERACTIVE="always"
 				else
-					echo "$APP_NAME: invalid argument \`$2' for \`--interactive'" >&2
+					echo "$APP_NAME: invalid argument '$2' for '--interactive'" >&2
 					echo "Valid arguments are:" >&2
-					echo "  - \`never', \`no', \`none'" >&2
-					echo "  - \`once'" >&2
-					echo "  - \`always', \`yes'" >&2
-					echo "Try \`$APP_NAME --help' for more information." >&2
+					echo "  - 'never', 'no', 'none'" >&2
+					echo "  - 'once'" >&2
+					echo "  - 'always', 'yes'" >&2
+					echo "Try \`$APP_NAME --help\` for more information." >&2
 					exit 2
 				fi
 
@@ -326,14 +326,14 @@ while true; do
 			elif [ "$2" == "never" ] || [ "$2" == "no" ]; then
 				FORBID_ROOT="never"
 			else
-				echo "$APP_NAME: invalid argument \`$2' for \`--forbid-root'" >&2
+				echo "$APP_NAME: invalid argument '$2' for '--forbid-root'" >&2
 				echo "Valid arguments are:" >&2
-				echo "  - \`always', \`yes'" >&2
-				echo "  - \`ask-forbid'" >&2
-				echo "  - \`ask-pass'" >&2
-				echo "  - \`pass'" >&2
-				echo "  - \`never', \`no'" >&2
-				echo "Try \`$APP_NAME --help' for more information." >&2
+				echo "  - 'always', 'yes'" >&2
+				echo "  - 'ask-forbid'" >&2
+				echo "  - 'ask-pass'" >&2
+				echo "  - 'pass'" >&2
+				echo "  - 'never', 'no'" >&2
+				echo "Try \`$APP_NAME --help\` for more information." >&2
 				exit 2
 			fi
 			
@@ -351,8 +351,8 @@ while true; do
 
 			showUsage
 			echo
-			echo "Put files (and directories) in trash using the \`$TRASH_CMD_NAME' command in a way"
-			echo "that is, otherwise as \`$TRASH_CMD_NAME' itself, compatible to GNUs \`rm'."
+			echo "Put files (and directories) in trash using the \`$TRASH_CMD_NAME\` command in a way"
+			echo "that is, otherwise as \`$TRASH_CMD_NAME\` itself, compatible to GNUs \`rm\`."
 			echo "  see $RM_CMD --help"
 			echo "  see $TRASH_CMD --help"
 			echo
@@ -373,39 +373,39 @@ while true; do
 			echo "                              directory that is on a file system different"
 			echo "                              from that of the corresponding command line"
 			echo "                              argument"
-			echo "      --no-preserve-root    do not treat \`/' specially"
-			echo "      --preserve-root       do not remove \`/' (default)"
+			echo "      --no-preserve-root    do not treat '/' specially"
+			echo "      --preserve-root       do not remove '/' (default)"
 			echo "  -r, -R, --recursive       remove directories and their contents recursively"
 			echo "  -d, --dir                 remove empty directories"
 			echo "  -v, --verbose             explain what is being done"
 			echo
 			echo "Replacement option:"
 			echo "  This option is not supposed to be used when calling $APP_NAME, it helps you"
-			echo "  to control how and in which cases \`rm' is replaced.  If you don't set this"
-			echo "  option, \`root' isn't treated specially."
-			echo "      --forbid-root[=HOW]   forbid user \`root' to trash files.  When standard"
-			echo "                              input is a terminal, \`ask-forbid' and \`ask-pass'"
+			echo "  to control how and in which cases \`rm\` is replaced.  If you don't set this"
+			echo "  option, root isn't treated specially."
+			echo "      --forbid-root[=HOW]   forbid user root to trash files.  When standard"
+			echo "                              input is a terminal, 'ask-forbid' and 'ask-pass'"
 			echo "                              will question the user to pass the command to"
-			echo "                              \`$RM_CMD'. When standard input is no terminal,"
-			echo "                              \`ask-forbid' will abort the command, whereas"
-			echo "                              \`ask-pass' will pass the command to \`$RM_CMD'."
-			echo "                              Use \`pass' to pass all commands of user \`root'"
-			echo "                              to \`$RM_CMD'. If user \`root' should never trash"
-			echo "                              files, use \`always'. In contrast, \`never' treats"
-			echo "                              \`root' in no special way. Without HOW,"
-			echo "                              \`ask-forbid' is assumed"
+			echo "                              \`$RM_CMD\`. When standard input is no terminal,"
+			echo "                              'ask-forbid' will abort the command, whereas"
+			echo "                              'ask-pass' will pass the command to \`$RM_CMD\`."
+			echo "                              Use 'pass' to pass all commands of user root to"
+			echo "                              \`$RM_CMD\`. If user root should never trash"
+			echo "                              files, use 'always'. In contrast, 'never' treats"
+			echo "                              root in no special way. Without HOW,"
+			echo "                              'ask-forbid' is assumed"
 			echo
 			echo "By default, $APP_NAME does not remove directories.  Use the --recursive"
 			echo "(-r or -R) option to remove each listed directory, too, along with all of"
 			echo "its contents."
 			echo
-			echo "To remove a file whose name starts with a \`-', for example \`-foo', use one"
+			echo "To remove a file whose name starts with a '-', for example '-foo', use one"
 			echo "of these commands:"
 			echo "  $APP_NAME -- -foo"
 			echo "  $APP_NAME ./-foo"
 			echo
-			echo "See also \`trash-list' (or \`list-trash'), \`trash-empty' (or \`empty-trash'),"
-			echo "\`trash-restore' (or \`restore-trash'), \`trash-rm', and the FreeDesktop.org"
+			echo "See also \`trash-list\` (or \`list-trash\`), \`trash-empty\` (or \`empty-trash\`),"
+			echo "\`trash-restore\` (or \`restore-trash\`), \`trash-rm\`, and the FreeDesktop.org"
 			echo "Trash Specification at <http://www.ramendik.ru/docs/trashspec.html>."
 			echo
 			echo "Please report bugs using GitHub at <https://github.com/PhrozenByte/rmtrash>."
@@ -447,7 +447,7 @@ fi
 
 # forbid root?
 if [ "$FORBID_ROOT" != "never" ] && [ "$(id -u)" -eq 0 ]; then
-	echo "$APP_NAME: user \`root' should never trash files" >&2
+	echo "$APP_NAME: user root should never trash files" >&2
 	
 	if [ "$FORBID_ROOT" == "always" ]; then
 		exit 4096
@@ -456,7 +456,7 @@ if [ "$FORBID_ROOT" != "never" ] && [ "$(id -u)" -eq 0 ]; then
 		if [ "$FORBID_ROOT" == "ask-forbid" ] || [ "$FORBID_ROOT" == "ask-pass" ]; then
 			# prompt
 			if [ $SHELL_IN_INTERACTIVE_MODE == true ]; then
-				echo -n "pass entire command to \`$RM_CMD' (delete arguments instead of trashing)? "
+				echo -n "pass entire command to \`$RM_CMD\` (delete arguments instead of trashing)? "
 				read PASS_COMMAND_ANSWER
 
 				if [ "$PASS_COMMAND_ANSWER" == "y" ] || [ "$PASS_COMMAND_ANSWER" == "yes" ]; then
@@ -469,14 +469,14 @@ if [ "$FORBID_ROOT" != "never" ] && [ "$(id -u)" -eq 0 ]; then
 					exit 4096
 				else
 					# unable to question user - pass command
-					echo "$APP_NAME: entire command will be passed to \`$RM_CMD'..."
+					echo "$APP_NAME: entire command will be passed to \`$RM_CMD\`..."
 					PASS_COMMAND=true
 				fi
 			fi
 		else
 			# pass always
 			PASS_COMMAND=true
-			echo "$APP_NAME: entire command will be passed to \`$RM_CMD'..."
+			echo "$APP_NAME: entire command will be passed to \`$RM_CMD\`..."
 		fi
 
 		if [ $PASS_COMMAND == true ]; then
@@ -491,13 +491,13 @@ if [ "$FORBID_ROOT" != "never" ] && [ "$(id -u)" -eq 0 ]; then
 
 			# execute command	
 			if [ $VERBOSE == true ]; then
-				echo "$APP_NAME: executing \`$CMD $CMD_OPTIONS ${CMD_ARGUMENTS:1}'"
+				echo "$APP_NAME: executing \`$CMD $CMD_OPTIONS ${CMD_ARGUMENTS:1}\`"
 			fi
 			eval "$CMD $CMD_OPTIONS ${CMD_ARGUMENTS:1}"
 			RM_EXIT_STATUS=$?
 			
 			if [ "$RM_EXIT_STATUS" -ne 0 ]; then
-				echo "$APP_NAME: execution of \`$RM_CMD' failed (exit status $RM_EXIT_STATUS)" >&2
+				echo "$APP_NAME: execution of \`$RM_CMD\` failed (exit status $RM_EXIT_STATUS)" >&2
 				exit 16
 			fi
 			exit 0
@@ -507,7 +507,7 @@ fi
 
 # exit if shell is not running in interactive mode and we should ask for every deletion
 if [ $SHELL_IN_INTERACTIVE_MODE == false ] && [ "$INTERACTIVE" == "always" ]; then
-	echo "$APP_NAME: \`--interactive=always' is not allowed in non-interactive mode" >&2
+	echo "$APP_NAME: '--interactive=always' is not allowed in non-interactive mode" >&2
 	exit 32
 fi
 
@@ -522,7 +522,7 @@ if [ "$INTERACTIVE" == "once" ]; then
 			fi
 		else
 			# exit if shell is not running in interactive mode
-			echo "$APP_NAME: \`--interactive=once' is not allowed in non-interactive mode" >&2
+			echo "$APP_NAME: '--interactive=once' is not allowed in non-interactive mode" >&2
 			exit 32
 		fi
 	fi
@@ -566,7 +566,7 @@ if [ "$ARGUMENT" != "/" ]; then
 else
 	# you can't remove /
 	if [ $RECURSIVE == true ] && [ $PRESERVE_ROOT == true ]; then
-		echo "$APP_NAME: cannot remove root directory \`/'" >&2
+		echo "$APP_NAME: cannot remove root directory '/'" >&2
 		exit 64
 	fi
 fi
@@ -574,14 +574,14 @@ fi
 # you can't remove . or ..
 ARGUMENT_BASENAME="$(basename "$ARGUMENT")"
 if [ "$ARGUMENT_BASENAME" == "." ] || [ "$ARGUMENT_BASENAME" == ".." ]; then
-	echo "$APP_NAME: refusing to remove \`.' or \`..' directory: skipping \`$ARGUMENT'" >&2
+	echo "$APP_NAME: refusing to remove '.' or '..' directory: skipping '$ARGUMENT'" >&2
 	exit 128
 fi
 
 # no such file or directory
 if [ ! -h "$ARGUMENT" ] && [ ! -e "$ARGUMENT" ]; then
 	if [ $FORCE == false ]; then
-		echo "$APP_NAME: cannot remove \`$ARGUMENT': No such file or directory" >&2
+		echo "$APP_NAME: cannot remove '$ARGUMENT': No such file or directory" >&2
 	fi
 	exit 256
 fi
@@ -620,14 +620,14 @@ while [ $INDEX -lt $MAX ]; do
 		# deleting empty directories in rmdir mode
 		if [ $RMDIR_MODE == true ]; then
 			if [ -z "$(find "$ARGUMENT" -maxdepth 0 -empty)" ]; then
-				echo "$APP_NAME: cannot remove \`$ARGUMENT': Directory not empty" >&2
+				echo "$APP_NAME: cannot remove '$ARGUMENT': Directory not empty" >&2
 				EXIT=$(( $EXIT | 512 ))
 				let "INDEX++"
 				continue
 			fi
 
 		elif [ $RECURSIVE == false ]; then
-			echo "$APP_NAME: cannot remove \`$FILENAME': Is a directory" >&2
+			echo "$APP_NAME: cannot remove '$FILENAME': Is a directory" >&2
 			EXIT=$(( $EXIT | 512 ))
 			let "INDEX++"
 			continue
@@ -652,7 +652,7 @@ while [ $INDEX -lt $MAX ]; do
 						# this directory is not empty but the next file is not part of it,
 						# thus this directory is a mount point of another file system
 						if [ "$(dirname "$CHECK_FILE")" != "$FILE" ]; then
-							echo "$APP_NAME: skipping \`$FILE', since it's on a different filesystem"
+							echo "$APP_NAME: skipping '$FILE', since it's on a different filesystem"
 							
 							# skip it
 							let "INDEX++"
@@ -676,7 +676,7 @@ while [ $INDEX -lt $MAX ]; do
 					if [ ! -w "$FILE" ]; then
 						echo -n "write-protected "
 					fi
-					echo -n "directory \`$FILENAME'? "
+					echo -n "directory '$FILENAME'? "
 					read ASK_TO_DESCEND_ANSWER
 
 					# we don't want to descend into this directory so skip all containing files
@@ -737,7 +737,7 @@ while [ $INDEX -lt $MAX ]; do
 				QUESTION+="file "
 			fi
 		fi
-		QUESTION+="\`$FILENAME'?"
+		QUESTION+="'$FILENAME'?"
 
 		echo -n "$QUESTION "
 		read ASK_TO_DELETE_ANSWER
@@ -818,7 +818,7 @@ while [ $INDEX -lt $MAX ]; do
 				if [ ! -w "$DESCENDED_DIRECTORY" ]; then
 					echo -n "write-protected "
 				fi
-				echo -n "empty directory \`$DESCENDED_DIRECTORYNAME'? "
+				echo -n "empty directory '$DESCENDED_DIRECTORYNAME'? "
 				read ASK_TO_DELETE_ANSWER
 
 				if [ "$ASK_TO_DELETE_ANSWER" != "y" ] && [ "$ASK_TO_DELETE_ANSWER" != "yes" ]; then
@@ -881,7 +881,7 @@ if [ ${#DELETE_FILES[@]} -gt 0 ]; then
 	
 	# execute command
 	if [ $VERBOSE == true ]; then
-		echo "$APP_NAME: executing \`$CMD'"
+		echo "$APP_NAME: executing \`$CMD\`"
 	fi
 	STDOUT="$(eval "$CMD" 2>&1)"
 	
@@ -951,7 +951,7 @@ if [ ${#DELETE_FILES[@]} -gt 0 ]; then
 					STDOUT="${STDOUT:0:$STDOUT_PREFIX_LENGTH}${STDOUT:$STDOUT_SUFFIX_INDEX}"
 					
 					# output what actually happened
-					echo "$APP_NAME: cannot remove \`$DELETE_ARGUMENT': unable to create trashcan \`$INSUFFICIENT_TRASHCAN': Permission denied" >&2
+					echo "$APP_NAME: cannot remove '$DELETE_ARGUMENT': unable to create trashcan '$INSUFFICIENT_TRASHCAN': Permission denied" >&2
 					EXIT=$(( $EXIT | 1024 ))
 					
 					# recommend user to create a trashcan-base-directory
@@ -969,7 +969,7 @@ if [ ${#DELETE_FILES[@]} -gt 0 ]; then
 	
 					# ask to pass argument to rm if shell is in interactive mode
 					if [ $SHELL_IN_INTERACTIVE_MODE == true ]; then
-						echo -n "pass argument to \`$RM_CMD' (delete argument instead of trashing)? "
+						echo -n "pass argument to \`$RM_CMD\` (delete argument instead of trashing)? "
 						read PASS_COMMAND_ANSWER
 
 						if [ "$PASS_COMMAND_ANSWER" == "y" ] || [ "$PASS_COMMAND_ANSWER" == "yes" ]; then
@@ -978,14 +978,14 @@ if [ ${#DELETE_FILES[@]} -gt 0 ]; then
 							CMD_ARGUMENTS="\"$DELETE_ARGUMENT\""
 						
 							if [ $VERBOSE == true ]; then
-								echo "$APP_NAME: executing \`$CMD $CMD_OPTIONS $CMD_ARGUMENTS'"
+								echo "$APP_NAME: executing \`$CMD $CMD_OPTIONS $CMD_ARGUMENTS\`"
 							fi
 							eval "$CMD $CMD_OPTIONS $CMD_ARGUMENTS"
 							RM_EXIT_STATUS=$?
 							
 							if [ "$RM_EXIT_STATUS" -ne 0 ]; then
 								EXIT=$(( $EXIT | 16 ))
-								echo "$APP_NAME: execution of \`$RM_CMD' failed (exit status $RM_EXIT_STATUS)" >&2
+								echo "$APP_NAME: execution of \`$RM_CMD\` failed (exit status $RM_EXIT_STATUS)" >&2
 							fi
 						fi
 					fi
@@ -1017,12 +1017,12 @@ if [ ${#DELETE_FILES[@]} -gt 0 ]; then
 				STDOUT="${STDOUT:0:$STDOUT_PREFIX_LENGTH}${STDOUT:$STDOUT_SUFFIX_INDEX}"
 				
 				# output what actually happened
-				echo "$APP_NAME: cannot remove \`$DELETE_ARGUMENT': you can't trash the trashcan" >&2
+				echo "$APP_NAME: cannot remove '$DELETE_ARGUMENT': you can't trash the trashcan" >&2
 				EXIT=$(( $EXIT | 2048 ))
 			
 				# ask to pass argument to rm if shell is in interactive mode
 				if [ $SHELL_IN_INTERACTIVE_MODE == true ]; then
-					echo -n "pass argument to \`$RM_CMD' (delete argument instead of trashing)? "
+					echo -n "pass argument to \`$RM_CMD\` (delete argument instead of trashing)? "
 					read PASS_COMMAND_ANSWER
 
 					if [ "$PASS_COMMAND_ANSWER" == "y" ] || [ "$PASS_COMMAND_ANSWER" == "yes" ]; then
@@ -1031,14 +1031,14 @@ if [ ${#DELETE_FILES[@]} -gt 0 ]; then
 						CMD_ARGUMENTS="\"$DELETE_ARGUMENT\""
 						
 						if [ $VERBOSE == true ]; then
-							echo "$APP_NAME: executing \`$CMD $CMD_OPTIONS $CMD_ARGUMENTS'"
+							echo "$APP_NAME: executing \`$CMD $CMD_OPTIONS $CMD_ARGUMENTS\`"
 						fi
 						eval "$CMD $CMD_OPTIONS $CMD_ARGUMENTS"
 						RM_EXIT_STATUS=$?
 							
 						if [ "$RM_EXIT_STATUS" -ne 0 ]; then
 							EXIT=$(( $EXIT | 16 ))
-							echo "$APP_NAME: execution of \`$RM_CMD' failed (exit status $RM_EXIT_STATUS)" >&2
+							echo "$APP_NAME: execution of \`$RM_CMD\` failed (exit status $RM_EXIT_STATUS)" >&2
 						fi
 					fi
 				fi
