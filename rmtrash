@@ -1,6 +1,6 @@
 #!/bin/bash
 # rmtrash - `rm` compatible layer for `trash`
-# Version 1.10 (build 20150324)
+# Version 1.11 (build 20150511)
 #
 #
 # SHORT DESCRIPTION:
@@ -148,8 +148,8 @@
 LC_ALL=C
 APP_NAME="$(basename "$0")"
 
-VERSION="1.10"
-BUILD="20150324"
+VERSION="1.11"
+BUILD="20150511"
 
 function showUsage() {
 	echo "Usage:"
