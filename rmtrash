@@ -577,7 +577,7 @@ if [ "$ARGUMENT_BASENAME" == "." ] || [ "$ARGUMENT_BASENAME" == ".." ]; then
 fi
 
 # no such file or directory
-if [ ! -e "$ARGUMENT" ]; then
+if [ ! -h "$ARGUMENT" ] && [ ! -e "$ARGUMENT" ]; then
 	if [ $FORCE == false ]; then
 		echo "$APP_NAME: cannot remove \`$ARGUMENT': No such file or directory" >&2
 	fi
@@ -697,20 +697,22 @@ while [ $INDEX -lt $MAX ]; do
 	if [ "$INTERACTIVE" == "always" ]; then
 		# prompt always
 		ASK_TO_DELETE=true
-	elif [ "$INTERACTIVE" != "never" ] && [ ! -w "$FILE" ] && [ $SHELL_IN_INTERACTIVE_MODE == true ]; then
-		# prompt if file isn't writable
-		ASK_TO_DELETE=true
+	elif [ "$INTERACTIVE" != "never" ] && [ $SHELL_IN_INTERACTIVE_MODE == true ]; then
+		if [ ! -h "$FILE" ] && [ ! -w "$FILE" ]; then
+			# prompt if file isn't writable
+			ASK_TO_DELETE=true
+		fi
 	fi
 
 	# prompt
 	if [ $ASK_TO_DELETE == true ]; then
 		QUESTION="$APP_NAME: remove "
-		if [ ! -w "$FILE" ]; then
-			QUESTION+="write-protected "
-		fi
 		if [ -h "$FILE" ]; then
 			QUESTION+="symbolic link "
 		else
+			if [ ! -w "$FILE" ]; then
+				QUESTION+="write-protected "
+			fi
 			if [ -d "$FILE" ]; then
 				# non-empty directorys can't get to this point
 				QUESTION+="empty directory "
