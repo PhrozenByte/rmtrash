@@ -157,7 +157,7 @@ function showUsage() {
 }
 
 function getOptionsAsCmdString() {
-	local CMD=""
+	local CMD="$1"
 	
 	if [ $FORCE == true ]; then
 		CMD+=" --force"
@@ -177,9 +177,7 @@ function getOptionsAsCmdString() {
 		CMD+=" --verbose"
 	fi
 	
-	if [ -n "$CMD" ]; then
-		echo "${CMD:1}"
-	fi
+	echo "$CMD"
 }
 
 # get path of rm
@@ -482,21 +480,22 @@ if [ "$FORBID_ROOT" != "never" ] && [ "$(id -u)" -eq 0 ]; then
 
 		if [ $PASS_COMMAND == true ]; then
 			# create command
-			CMD="$RM_CMD"
-			CMD_OPTIONS="$(getOptionsAsCmdString)"
-			CMD_ARGUMENTS=""
+			CMD="$(getOptionsAsCmdString "$RM_CMD")"
+
+			CMD_ARGUMENTS=()
 			while [ $# -gt 0 ]; do
-				CMD_ARGUMENTS+=" \"$1\""
+				CMD_ARGUMENTS+=( "$1" )
 				shift
 			done
 
-			# execute command	
+			# execute command
 			if [ $VERBOSE == true ]; then
-				echo "$APP_NAME: executing \`$CMD $CMD_OPTIONS ${CMD_ARGUMENTS:1}\`"
+				echo "$APP_NAME: executing \`$CMD$(printf ' "%s"' "${CMD_ARGUMENTS[@]}")\`"
 			fi
-			eval "$CMD $CMD_OPTIONS ${CMD_ARGUMENTS:1}"
+
+			eval "$CMD \"\${CMD_ARGUMENTS[@]}\""
 			RM_EXIT_STATUS=$?
-			
+
 			if [ "$RM_EXIT_STATUS" -ne 0 ]; then
 				echo "$APP_NAME: execution of \`$RM_CMD\` failed (exit status $RM_EXIT_STATUS)" >&2
 				exit 16
@@ -536,13 +535,12 @@ fi
 EXIT=0
 if [ $# -gt 1 ]; then
 	# create command
-	CMD="$0"
-	CMD_OPTIONS="$(getOptionsAsCmdString)"
+	CMD="$(getOptionsAsCmdString "$0")"
 
 	# parse arguments
 	while [ $# -gt 1 ]; do
 		# execute command
-		eval "$CMD $CMD_OPTIONS \"$1\""
+		eval "$CMD \"\$1\""
 
 		# get return value
 		EXIT_STATUS=$?
@@ -875,16 +873,17 @@ if [ ${#DELETE_FILES[@]} -gt 0 ]; then
 	# add files to command
 	INDEX=0
 	MAX=${#DELETE_FILES[@]}
+	CMD_ARGUMENTS=()
 	while [ $INDEX -lt $MAX ]; do
-		CMD+=" \"${DELETE_FILES[$INDEX]}\""
+		CMD_ARGUMENTS+=( "${DELETE_FILES[$INDEX]}" )
 		let "INDEX++"
 	done
 	
 	# execute command
 	if [ $VERBOSE == true ]; then
-		echo "$APP_NAME: executing \`$CMD\`"
+		echo "$APP_NAME: executing \`$CMD$(printf ' "%s"' "${CMD_ARGUMENTS[@]}")\`"
 	fi
-	STDOUT="$(eval "$CMD" 2>&1)"
+	STDOUT="$(eval "$CMD \"\${CMD_ARGUMENTS[@]}\"" 2>&1)"
 	
 	# remove traceback from stdout
 	if [ -n "$STDOUT" ]; then
@@ -974,16 +973,15 @@ if [ ${#DELETE_FILES[@]} -gt 0 ]; then
 						read PASS_COMMAND_ANSWER
 
 						if [ "$PASS_COMMAND_ANSWER" == "y" ] || [ "$PASS_COMMAND_ANSWER" == "yes" ]; then
-							CMD="$RM_CMD"
-							CMD_OPTIONS="$(getOptionsAsCmdString)"
-							CMD_ARGUMENTS="\"$DELETE_ARGUMENT\""
-						
+							CMD="$(getOptionsAsCmdString "$RM_CMD")"
+
 							if [ $VERBOSE == true ]; then
-								echo "$APP_NAME: executing \`$CMD $CMD_OPTIONS $CMD_ARGUMENTS\`"
+								echo "$APP_NAME: executing \`$CMD \"$DELETE_ARGUMENT\"\`"
 							fi
-							eval "$CMD $CMD_OPTIONS $CMD_ARGUMENTS"
+
+							eval "$CMD \"\$DELETE_ARGUMENT\""
 							RM_EXIT_STATUS=$?
-							
+
 							if [ "$RM_EXIT_STATUS" -ne 0 ]; then
 								EXIT=$(( $EXIT | 16 ))
 								echo "$APP_NAME: execution of \`$RM_CMD\` failed (exit status $RM_EXIT_STATUS)" >&2
@@ -1027,16 +1025,15 @@ if [ ${#DELETE_FILES[@]} -gt 0 ]; then
 					read PASS_COMMAND_ANSWER
 
 					if [ "$PASS_COMMAND_ANSWER" == "y" ] || [ "$PASS_COMMAND_ANSWER" == "yes" ]; then
-						CMD="$RM_CMD"
-						CMD_OPTIONS="$(getOptionsAsCmdString)"
-						CMD_ARGUMENTS="\"$DELETE_ARGUMENT\""
-						
+						CMD="$(getOptionsAsCmdString "$RM_CMD")"
+
 						if [ $VERBOSE == true ]; then
-							echo "$APP_NAME: executing \`$CMD $CMD_OPTIONS $CMD_ARGUMENTS\`"
+							echo "$APP_NAME: executing \`$CMD \"$DELETE_ARGUMENT\"\`"
 						fi
-						eval "$CMD $CMD_OPTIONS $CMD_ARGUMENTS"
+
+						eval "$CMD \"\$DELETE_ARGUMENT\""
 						RM_EXIT_STATUS=$?
-							
+
 						if [ "$RM_EXIT_STATUS" -ne 0 ]; then
 							EXIT=$(( $EXIT | 16 ))
 							echo "$APP_NAME: execution of \`$RM_CMD\` failed (exit status $RM_EXIT_STATUS)" >&2

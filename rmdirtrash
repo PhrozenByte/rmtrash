@@ -140,8 +140,8 @@ function showUsage() {
 }
 
 function getOptionsAsCmdString() {
-	local CMD=""
-	
+	local CMD="$1"
+
 	if [ $IGNORE_FAIL_ON_NON_EMPTY == true ]; then
 		CMD+=" --ignore-fail-on-non-empty"
 	fi
@@ -151,10 +151,8 @@ function getOptionsAsCmdString() {
 	if [ $VERBOSE == true ]; then
 		CMD+=" --verbose"
 	fi
-	
-	if [ -n "$CMD" ]; then
-		echo "${CMD:1}"
-	fi
+
+	echo "$CMD"
 }
 
 # get path of rmdir
@@ -385,19 +383,20 @@ if [ "$FORBID_ROOT" != "never" ] && [ "$(id -u)" -eq 0 ]; then
 
 		if [ $PASS_COMMAND == true ]; then
 			# create command
-			CMD="$RMDIR_CMD"
-			CMD_OPTIONS="$(getOptionsAsCmdString)"
-			CMD_ARGUMENTS=""
+			CMD="$(getOptionsAsCmdString "$RMDIR_CMD")"
+
+			CMD_ARGUMENTS=()
 			while [ $# -gt 0 ]; do
-				CMD_ARGUMENTS+=" \"$1\""
+				CMD_ARGUMENTS+=( "$1" )
 				shift
 			done
 
-			# execute command	
+			# execute command
 			if [ $VERBOSE == true ]; then
-				echo "$APP_NAME: executing \`$CMD $CMD_OPTIONS ${CMD_ARGUMENTS:1}\`"
+				echo "$APP_NAME: executing \`$CMD$(printf ' "%s"' "${CMD_ARGUMENTS[@]}")\`"
 			fi
-			eval "$CMD $CMD_OPTIONS ${CMD_ARGUMENTS:1}"
+
+			eval "$CMD \"\${CMD_ARGUMENTS[@]}\""
 			RMDIR_EXIT_STATUS=$?
 			
 			if [ "$RMDIR_EXIT_STATUS" -ne 0 ]; then
@@ -413,13 +412,12 @@ fi
 EXIT=0
 if [ $# -gt 1 ]; then
 	# create command
-	CMD="$0"
-	CMD_OPTIONS="$(getOptionsAsCmdString)"
+	CMD="$(getOptionsAsCmdString "$0")"
 
 	# parse arguments
 	while [ $# -gt 1 ]; do
 		# execute command
-		eval "$CMD $CMD_OPTIONS \"$1\""
+		eval "$CMD \"\$1\""
 
 		# get return value
 		EXIT_STATUS=$?
@@ -537,16 +535,17 @@ if [ ${#DELETE_DIRECTORIES[@]} -gt 0 ]; then
 	# add directories to command
 	INDEX=0
 	MAX=${#DELETE_DIRECTORIES[@]}
+	CMD_ARGUMENTS=()
 	while [ $INDEX -lt $MAX ]; do
-		CMD+=" \"${DELETE_DIRECTORIES[$INDEX]}\""
+		CMD_ARGUMENTS+=( "${DELETE_DIRECTORIES[$INDEX]}" )
 		let "INDEX++"
 	done
 	
 	# execute command
 	if [ $VERBOSE == true ]; then
-		echo "$APP_NAME: executing \`$CMD\`"
+		echo "$APP_NAME: executing \`$CMD$(printf ' "%s"' "${CMD_ARGUMENTS[@]}")\`"
 	fi
-	STDOUT="$(eval "$CMD" 2>&1)"
+	STDOUT="$(eval "$CMD \"\${CMD_ARGUMENTS[@]}\"" 2>&1)"
 	
 	# remove traceback from stdout
 	if [ -n "$STDOUT" ]; then
@@ -636,16 +635,15 @@ if [ ${#DELETE_DIRECTORIES[@]} -gt 0 ]; then
 						read PASS_COMMAND_ANSWER
 
 						if [ "$PASS_COMMAND_ANSWER" == "y" ] || [ "$PASS_COMMAND_ANSWER" == "yes" ]; then
-							CMD="$RMDIR_CMD"
-							CMD_OPTIONS="$(getOptionsAsCmdString)"
-							CMD_ARGUMENTS="\"$DELETE_ARGUMENT\""
-						
+							CMD="$(getOptionsAsCmdString "$RMDIR_CMD")"
+
 							if [ $VERBOSE == true ]; then
-								echo "$APP_NAME: executing \`$CMD $CMD_OPTIONS $CMD_ARGUMENTS\`"
+								echo "$APP_NAME: executing \`$CMD \"$DELETE_ARGUMENT\"\`"
 							fi
-							eval "$CMD $CMD_OPTIONS $CMD_ARGUMENTS"
+
+							eval "$CMD \"\$DELETE_ARGUMENT\""
 							RMDIR_EXIT_STATUS=$?
-							
+
 							if [ "$RMDIR_EXIT_STATUS" -ne 0 ]; then
 								EXIT=$(( $EXIT | 16 ))
 								echo "$APP_NAME: execution of \`$RMDIR_CMD\` failed (exit status $RMDIR_EXIT_STATUS)" >&2
@@ -689,16 +687,15 @@ if [ ${#DELETE_DIRECTORIES[@]} -gt 0 ]; then
 					read PASS_COMMAND_ANSWER
 
 					if [ "$PASS_COMMAND_ANSWER" == "y" ] || [ "$PASS_COMMAND_ANSWER" == "yes" ]; then
-						CMD="$RMDIR_CMD"
-						CMD_OPTIONS="$(getOptionsAsCmdString)"
-						CMD_ARGUMENTS="\"$DELETE_ARGUMENT\""
-						
+						CMD="$(getOptionsAsCmdString "$RMDIR_CMD")"
+
 						if [ $VERBOSE == true ]; then
-							echo "$APP_NAME: executing \`$CMD $CMD_OPTIONS $CMD_ARGUMENTS\`"
+							echo "$APP_NAME: executing \`$CMD \"$DELETE_ARGUMENT\"\`"
 						fi
-						eval "$CMD $CMD_OPTIONS $CMD_ARGUMENTS"
+
+						eval "$CMD \"\$DELETE_ARGUMENT\""
 						RMDIR_EXIT_STATUS=$?
-							
+
 						if [ "$RMDIR_EXIT_STATUS" -ne 0 ]; then
 							EXIT=$(( $EXIT | 16 ))
 							echo "$APP_NAME: execution of \`$RMDIR_CMD\` failed (exit status $RMDIR_EXIT_STATUS)" >&2
