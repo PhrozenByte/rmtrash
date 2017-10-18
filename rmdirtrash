@@ -251,7 +251,7 @@ while true; do
 				echo "Try \`$APP_NAME --help\` for more information." >&2
 				exit 2
 			fi
-			
+
 			shift 2
 			;;
 
@@ -263,7 +263,7 @@ while true; do
 
 		"--help")
 			TRASH_CMD_NAME="$(basename "$TRASH_CMD")"
-			
+
 			showUsage
 			echo
 			echo "Put empty directories in trash using the \`$TRASH_CMD_NAME\` command in a way that is,"
@@ -350,7 +350,7 @@ fi
 # forbid root?
 if [ "$FORBID_ROOT" != "never" ] && [ "$(id -u)" -eq 0 ]; then
 	echo "$APP_NAME: user root should never trash directories" >&2
-	
+
 	if [ "$FORBID_ROOT" == "always" ]; then
 		exit 4096
 	else
@@ -398,7 +398,7 @@ if [ "$FORBID_ROOT" != "never" ] && [ "$(id -u)" -eq 0 ]; then
 
 			eval "$CMD \"\${CMD_ARGUMENTS[@]}\""
 			RMDIR_EXIT_STATUS=$?
-			
+
 			if [ "$RMDIR_EXIT_STATUS" -ne 0 ]; then
 				echo "$APP_NAME: execution of \`$RMDIR_CMD\` failed (exit status $RMDIR_EXIT_STATUS)" >&2
 				exit 16
@@ -515,7 +515,7 @@ if [ $PARENTS == true ]; then
 				break 2
 			fi
 		done 4< <(find "$DELETE_PARENT_DIRECTORY" -mindepth 1 -maxdepth 1 -print0)
-		
+
 		# okay, let's delete this directory instead of the inferior one
 		DELETE_DIRECTORIES[$LAST_DELETE_DIRECTORY_INDEX]="$DELETE_PARENT_DIRECTORY"
 		let "PARENT_ARGUMENTS_MAIN_INDEX--"
@@ -531,7 +531,7 @@ if [ ${#DELETE_DIRECTORIES[@]} -gt 0 ]; then
 	if [ $VERBOSE == true ]; then
 		CMD+=" --verbose"
 	fi
-	
+
 	# add directories to command
 	INDEX=0
 	MAX=${#DELETE_DIRECTORIES[@]}
@@ -540,30 +540,30 @@ if [ ${#DELETE_DIRECTORIES[@]} -gt 0 ]; then
 		CMD_ARGUMENTS+=( "${DELETE_DIRECTORIES[$INDEX]}" )
 		let "INDEX++"
 	done
-	
+
 	# execute command
 	if [ $VERBOSE == true ]; then
 		echo "$APP_NAME: executing \`$CMD$(printf ' "%s"' "${CMD_ARGUMENTS[@]}")\`"
 	fi
 	STDOUT="$(eval "$CMD \"\${CMD_ARGUMENTS[@]}\"" 2>&1)"
-	
+
 	# remove traceback from stdout
 	if [ -n "$STDOUT" ]; then
 		STDOUT_OLD="$STDOUT"
 		STDOUT=""
-	
+
 		IFS=$'\n'
 		IS_TRACEBACK=false
 		for STDOUT_LINE in $STDOUT_OLD; do
 			if [ -n "$STDOUT" ]; then
 				n=$'\n'
 			fi
-	
+
 			if [ "$STDOUT_LINE" == "Traceback (most recent call last):" ]; then
 				IS_TRACEBACK=true
 				continue
 			fi
-		
+
 			if [ $IS_TRACEBACK == true ]; then
 				if [ "${STDOUT_LINE:0:2}" != "  " ]; then
 					STDOUT+="$n$STDOUT_LINE"
@@ -574,7 +574,7 @@ if [ ${#DELETE_DIRECTORIES[@]} -gt 0 ]; then
 			fi
 		done
 	fi
-	
+
 	# catch some special errors
 	if [ -n "$STDOUT" ]; then
 		# unable to create trashcan (permission denied)
@@ -583,42 +583,42 @@ if [ ${#DELETE_DIRECTORIES[@]} -gt 0 ]; then
 			INSUFFICIENT_TRASHCAN="$(echo "$STDOUT" | grep -m 1 -b -oP "(?<=^OSError: \[Errno 13\] Permission denied: ')([^\0]*?)/\.Trash-([0-9]+?)(?='$)")"
 			if [ -n "$INSUFFICIENT_TRASHCAN" ]; then
 				TEMP="$(echo "$INSUFFICIENT_TRASHCAN" | grep -m 1 -oP "^([0-9]+?)(?=:)")"
-				
+
 				# fix insufficient trashcan string
 				let "INSUFFICIENT_TRASHCAN_INDEX = ${#TEMP} + 1"
 				INSUFFICIENT_TRASHCAN="${INSUFFICIENT_TRASHCAN:$INSUFFICIENT_TRASHCAN_INDEX}"
-		
+
 				# remove that error from stdout
 				let "STDOUT_PREFIX_LENGTH = $TEMP - 40"
 				let "STDOUT_SUFFIX_INDEX = $TEMP + ${#INSUFFICIENT_TRASHCAN} + 1 + 1"
 				STDOUT="${STDOUT:0:$STDOUT_PREFIX_LENGTH}${STDOUT:$STDOUT_SUFFIX_INDEX}"
-				
+
 				# check if insufficient trashcan is valid
 				if [ "$(basename "$INSUFFICIENT_TRASHCAN")" != ".Trash-$(id -u)" ]; then
 					continue
 				fi
-				
+
 				# get delete argument
 				DELETE_ARGUMENT="$(echo "$STDOUT" | grep -m 1 -b -oP "(?<=^trash: cannot trash \`)([^\0]+?)(?=': \[Errno 13\] Permission denied: '$INSUFFICIENT_TRASHCAN'$)")"
 				if [ -n "$DELETE_ARGUMENT" ]; then
 					TEMP="$(echo "$DELETE_ARGUMENT" | grep -m 1 -oP "^([0-9]+?)(?=:)")"
-				
+
 					# fix delete argument string
 					let "DELETE_ARGUMENT_INDEX = ${#TEMP} + 1"
 					DELETE_ARGUMENT="${DELETE_ARGUMENT:$DELETE_ARGUMENT_INDEX}"
-		
+
 					# remove that error from stdout
 					let "STDOUT_PREFIX_LENGTH = $TEMP - 21"
 					let "STDOUT_SUFFIX_INDEX = $TEMP + ${#DELETE_ARGUMENT} + 34 + ${#INSUFFICIENT_TRASHCAN} + 1 + 1"
 					STDOUT="${STDOUT:0:$STDOUT_PREFIX_LENGTH}${STDOUT:$STDOUT_SUFFIX_INDEX}"
-					
+
 					# output what actually happened
 					echo "$APP_NAME: cannot remove '$DELETE_ARGUMENT': unable to create trashcan '$INSUFFICIENT_TRASHCAN': Permission denied" >&2
 					EXIT=$(( $EXIT | 1024 ))
-					
+
 					# recommend user to create a trashcan-base-directory
 					INSUFFICIENT_TRASHCAN_BASE_DIRECTORY="$(echo "$INSUFFICIENT_TRASHCAN" | grep -m 1 -oP "^([^\0]+?).Trash(?=-$(id -u)$)")"
-					
+
 					echo "" >&2
 					echo "According to the FreeDesktop.org Trash Specification, it's recommended to" >&2
 					echo "create a directory where all users can create a trashcan on their own." >&2
@@ -628,7 +628,7 @@ if [ ${#DELETE_DIRECTORIES[@]} -gt 0 ]; then
 					echo "When you've done that, repeat your deletion-command. Alternatively" >&2
 					echo "you can delete the argument instead of trashing it." >&2
 					echo "" >&2
-	
+
 					# ask to pass argument to rm if shell is in interactive mode
 					if [ $SHELL_IN_INTERACTIVE_MODE == true ]; then
 						echo -n "pass argument to \`$RMDIR_CMD\` (delete argument instead of trashing)? "
@@ -651,36 +651,36 @@ if [ ${#DELETE_DIRECTORIES[@]} -gt 0 ]; then
 						fi
 					fi
 				fi
-				
+
 			# no more errors
 			else
 				break
 			fi
 		done
-		
+
 		# you can't trash the trashcan
 		while true; do
 			# get delete argument
 			DELETE_ARGUMENT="$(echo "$STDOUT" | grep -m 1 -b -oP "(?<=^shutil\.Error: Cannot move a directory ')([^\0]+?)(?=' into itself '([^\0]+?)'\.$)")"
 			if [ -n "$DELETE_ARGUMENT" ]; then
 				TEMP="$(echo "$DELETE_ARGUMENT" | grep -m 1 -oP "^([0-9]+?)(?=:)")"
-				
+
 				# fix delete argument string
 				let "DELETE_ARGUMENT_INDEX = ${#TEMP} + 1"
 				DELETE_ARGUMENT="${DELETE_ARGUMENT:$DELETE_ARGUMENT_INDEX}"
-				
+
 				# get delete argument target
 				DELETE_ARGUMENT_TARGET="$(echo "$STDOUT" | grep -m 1 -oP "(?<=^shutil\.Error: Cannot move a directory '$DELETE_ARGUMENT' into itself ')([^\0]+?)(?='\.$)")"
-		
+
 				# remove that error from stdout
 				let "STDOUT_PREFIX_LENGTH = $TEMP - 39"
 				let "STDOUT_SUFFIX_INDEX = $TEMP + ${#DELETE_ARGUMENT} + 15 + ${#DELETE_ARGUMENT_TARGET} + 2 + 1"
 				STDOUT="${STDOUT:0:$STDOUT_PREFIX_LENGTH}${STDOUT:$STDOUT_SUFFIX_INDEX}"
-				
+
 				# output what actually happened
 				echo "$APP_NAME: cannot remove '$DELETE_ARGUMENT': you can't trash the trashcan" >&2
 				EXIT=$(( $EXIT | 2048 ))
-			
+
 				# ask to pass argument to rm if shell is in interactive mode
 				if [ $SHELL_IN_INTERACTIVE_MODE == true ]; then
 					echo -n "pass argument to \`$RMDIR_CMD\` (delete argument instead of trashing)? "
@@ -702,14 +702,14 @@ if [ ${#DELETE_DIRECTORIES[@]} -gt 0 ]; then
 						fi
 					fi
 				fi
-				
+
 			# no more errors
 			else
 				break
 			fi
 		done
 	fi
-		
+
 	# output stdout
 	if [ -n "$STDOUT" ]; then
 		echo "$STDOUT"

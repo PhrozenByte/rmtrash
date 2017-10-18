@@ -1,37 +1,45 @@
 rmtrash 1.11
 ============
+
 Put files (and directories) in trash using the ```trash-put``` command in a way that is, otherwise as ```trash-put``` itself, compatible to GNUs ```rm``` and ```rmdir```.
 
 [Click here for more information about trash-cli.](https://github.com/andreafrancia/trash-cli)
 
 Installation
 ------------
+
 Just download both scriptfiles (```rmtrash``` and ```rmdirtrash```) and put them in ```/usr/local/bin```.
 
 If you don't want to readjust the usage of ```rm``` and ```rmdir```, a bash alias is probably a great solution for you. Just add the lines
+
 ```
 alias rm='rmtrash'
 alias rmdir='rmdirtrash'
 alias sudo='sudo '
 ```
+
 to your ```~/.bashrc``` (or ```~/.bash_aliases```). Consider adding the ```--forbid-root``` option (see *replacement option* below)! The last line is optional, without you'll notice that ```rmtrash``` and ```rmdirtrash``` won't be called when using ```sudo```.
 
 Requirements
 ------------
+
 Obviously  ```trash-cli``` (to provide the ```trash-put``` or ```trash``` command) is required. ```rmtrash``` and ```rmdirtrash``` were tested with Ubuntu Linux 10.04 LTS (Lucid Lynx), Ubuntu Linux 12.04 LTS (Precise Pangolin) and Debian 8 (Jessie) only, but it *should* work great with any other distribution, too. Anyway, if ```rmtrash``` or ```rmdirtrash``` doesn't work with your favourite distribution, please file a bug report. It was written to work with ```bash```.
 
 **You wanna make ```rmtrash``` and ```rmdirtrash``` work with your favorite distribution or improve them in general?** Go on, I appreciate it!
 
 Usage of rmtrash
 ----------------
+
 ```shell
 rmtrash [OPTION]... [FILE...]
 ```
 
 ```rmtrash``` supports everything that GNUs ```rm``` does, that means it accepts the following options (see ```--help```):
+
 * Help options:
   * ```--help```: display help and exit
   * ```--version```: output version information and exit
+
 * Application options:
   * ```-f```, ```--force```: ignore nonexistent files, never prompt
   * ```-i```: prompt before every removal
@@ -46,6 +54,7 @@ rmtrash [OPTION]... [FILE...]
 
 Usage of rmdirtrash
 -------------------
+
 ```shell
 rmdirtrash [OPTION]... [DIRECTORY...]
 ```
@@ -54,6 +63,7 @@ rmdirtrash [OPTION]... [DIRECTORY...]
 * Help options:
   * ```--help```: display help and exit
   * ```--version```: output version information and exit
+
 * Application options:
   * ```--ignore-fail-on-non-empty```: ignore each failure that is solely because a directory is non-empty
   * ```-p```, ```--parents```: remove DIRECTORY and its ancestors; e.g., ```rmdirtrash -p a/b/c``` is similar to ```rmdirtrash a/b/c a/b a```
@@ -61,11 +71,14 @@ rmdirtrash [OPTION]... [DIRECTORY...]
 
 Replacement option
 ------------------
+
 This option is not supposed to be used when calling ```rmtrash``` resp. ```rmdirtrash```. It helps you to control how and in which cases ```rm``` resp. ```rmdir``` are replaced. Without ```--forbid-root```, ```root``` isn't treated specially.
+
 * ```--forbid-root[=HOW]```: forbid user ```root``` to trash files.  When standard input is a terminal, ```ask-forbid``` and ```ask-pass``` will question the user to pass the command to ```/bin/rm```. When standard input is no terminal, ```ask-forbid``` will abort the command, whereas ```ask-pass``` will pass the command to ```/bin/rm```. Use ```pass``` to pass all commands of user ```root``` to ```/bin/rm``` without a query. If user ```root``` should never trash files, use ```always```. In contrast, ```never``` treats ```root``` in no special way. Without ```HOW```, ```ask-forbid``` is assumed
 
 Additional Notes
 ----------------
+
 For additional information see the ```trash-list``` (or ```list-trash```), ```trash-empty``` (or ```empty-trash```), ```trash-restore``` (or ```restore-trash```) and ```trash-rm``` commands provided by ```trash-cli``` ([Homepage](https://github.com/andreafrancia/trash-cli)) as well as the [FreeDesktop.org Trash Specification](http://www.ramendik.ru/docs/trashspec.html). Note ```trash-put --help``` (or ```trash --help```) and ```rm --help```, too.
 
 **A important note about execution time:**
@@ -75,6 +88,7 @@ Typically you won't notice a time delay when using ```rmtrash``` and ```rmdirtra
 
 License & Copyright
 -------------------
+
 Copyright (C) 2011-2015  Daniel Rudolf <http://www.daniel-rudolf.de/>
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 3 of the License only.
