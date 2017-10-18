@@ -1,4 +1,4 @@
-rmtrash 1.11
+rmtrash 1.12
 ============
 
 Put files (and directories) in trash using the ```trash-put``` command in a way that is, otherwise as ```trash-put``` itself, compatible to GNUs ```rm``` and ```rmdir```.
@@ -89,7 +89,7 @@ Typically you won't notice a time delay when using ```rmtrash``` and ```rmdirtra
 License & Copyright
 -------------------
 
-Copyright (C) 2011-2015  Daniel Rudolf <http://www.daniel-rudolf.de/>
+Copyright (C) 2011-2017  Daniel Rudolf <http://www.daniel-rudolf.de/>
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 3 of the License only.
 

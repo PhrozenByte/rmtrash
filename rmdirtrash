@@ -1,6 +1,6 @@
 #!/bin/bash
 # rmdirtrash - `rmdir` compatible layer for `trash`
-# Version 1.11 (build 20150511)
+# Version 1.12 (build 20171018)
 #
 #
 # SHORT DESCRIPTION:
@@ -68,7 +68,7 @@
 #
 #
 # COPYRIGHT AND LICENSING:
-#   Copyright (C) 2011-2015  Daniel Rudolf <http://www.daniel-rudolf.de/>
+#   Copyright (C) 2011-2017  Daniel Rudolf <http://www.daniel-rudolf.de/>
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -127,12 +127,14 @@
 #   v1.11 - 2015-05-11 00:05:00+0200
 #       * fixing deletion of invalid symlinks
 #       * unifying quotations
+#   v1.12 - 2017-10-18 18:07:00+0200
+#       * fixing GitHub Issue #8
 
 LC_ALL=C
 APP_NAME=$(basename "$0")
 
-VERSION="1.11"
-BUILD="20150511"
+VERSION="1.12"
+BUILD="20171018"
 
 function showUsage() {
 	echo "Usage:"
@@ -317,7 +319,7 @@ while true; do
 
 		"--version")
 			echo "rmdirtrash $VERSION (build $BUILD)"
-			echo "Copyright (C) 2011-2015 Daniel Rudolf"
+			echo "Copyright (C) 2011-2017 Daniel Rudolf"
 			echo "License GPLv3: GNU GPL version 3 only <http://gnu.org/licenses/gpl.html>."
 			echo "This is free software: you are free to change and redistribute it."
 			echo "There is NO WARRANTY, to the extent permitted by law."
