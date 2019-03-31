@@ -220,7 +220,7 @@ fi
 
 # check if shell is running in interactive mode
 SHELL_IN_INTERACTIVE_MODE=false
-tty --quiet
+tty -s
 if [ $? -eq 0 ]; then
 	SHELL_IN_INTERACTIVE_MODE=true
 fi
