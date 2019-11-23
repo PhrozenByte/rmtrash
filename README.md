@@ -20,6 +20,22 @@ alias sudo='sudo '
 
 to your ```~/.bashrc``` (or ```~/.bash_aliases```). Consider adding the ```--forbid-root``` option (see *replacement option* below)! The last line is optional, without you'll notice that ```rmtrash``` and ```rmdirtrash``` won't be called when using ```sudo```.
 
+Installation on Fedora, CentOS or RHEL
+------------
+
+Dowload and install RPM packege from [here](./bin/noarch/) or from [here](http://sandrospadaro.altervista.org/repo/index.html)
+
+Otherwise you can install thru ```dnf``` by following these steps:
+* Configure yum repository:
+```
+$ cd /etc/yum.repos.d/
+$ sudo curl http://sandrospadaro.altervista.org/sandrospadaro.repo --output sandrospadaro.repo
+```
+* install the packege:
+```
+$ sudo dnf install rmtrash -y
+```
+
 Requirements
 ------------
 
