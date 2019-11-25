@@ -23,7 +23,7 @@ to your ```~/.bashrc``` (or ```~/.bash_aliases```). Consider adding the ```--for
 Installation on Fedora, CentOS or RHEL
 ------------
 
-Dowload and install RPM packege from [here](./bin/noarch/) or from [here](http://sandrospadaro.altervista.org/repo/index.html)
+Download and install RPM package from [here](./bin/noarch/) or from [here](http://sandrospadaro.altervista.org/repo/index.html)
 
 Otherwise you can install thru ```dnf``` by following these steps:
 * Configure yum repository:
