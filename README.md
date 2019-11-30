@@ -8,7 +8,18 @@ Put files (and directories) in trash using the ```trash-put``` command in a way 
 Installation
 ------------
 
-Just download both scriptfiles (```rmtrash``` and ```rmdirtrash```) and put them in ```/usr/local/bin```. If you're using Arch Linux, you can also use the [AUR package](https://aur.archlinux.org/packages/rmtrash/).
+Just download both scriptfiles (```rmtrash``` and ```rmdirtrash```) and put them in ```/usr/local/bin```. If you're using Arch Linux, you can also use the [AUR package](https://aur.archlinux.org/packages/rmtrash/). If you are using Fedora, CentOS or RHEL, you can download RPM package from [here](http://sandrospadaro.altervista.org/repo/index.html).
+
+Otherwise you can install thru ```dnf``` by following these steps:
+* Configure yum repository:
+```
+$ cd /etc/yum.repos.d/
+$ sudo curl http://sandrospadaro.altervista.org/sandrospadaro.repo --output sandrospadaro.repo
+```
+* install the packege:
+```
+$ sudo dnf install rmtrash -y
+```
 
 If you don't want to readjust the usage of ```rm``` and ```rmdir```, a bash alias is probably a great solution for you. Just add the lines
 
