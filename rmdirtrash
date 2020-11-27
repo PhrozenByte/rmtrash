@@ -470,9 +470,13 @@ if [ -h "$DIRECTORY" ] || [ ! -d "$DIRECTORY" ]; then
 fi
 
 # directory not empty
-if [ -z "$(find "$DIRECTORY" -maxdepth 0 -empty)" ] && [ $IGNORE_FAIL_ON_NON_EMPTY == false ]; then
-	echo "$APP_NAME: failed to remove '$ARGUMENT': Directory not empty" >&2
-	exit 512
+if [ -z "$(find "$DIRECTORY" -maxdepth 0 -empty)" ]; then
+	if [ $IGNORE_FAIL_ON_NON_EMPTY == false ]; then
+		echo "$APP_NAME: failed to remove '$ARGUMENT': Directory not empty" >&2
+		exit 512
+	fi
+
+	exit 0
 fi
 
 # okay, let's delete this directory
