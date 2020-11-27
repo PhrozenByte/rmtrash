@@ -16,12 +16,9 @@
 #   note that this script uses options of POSIX commands, which are not part of
 #   the POSIX standard. The extended variants provided by GNU are recommended.
 #
-#   This script was tested with Ubuntu 10.04 LTS (Lucid Lynx) and
-#   Ubuntu 12.04 LTS (Precise Pangolin) only. It SHOULD work great with any
-#   other distribution.
-#
-#   You want to make rmtrash work with your favorite distribution?
-#   Go on, I appreciate it!
+#   This script SHOULD work great with any distribution. If it doesn't work
+#   with your favourite distribution, please file a bug report. It was written
+#   to work with bash.
 #
 #
 # EXIT CODES:
