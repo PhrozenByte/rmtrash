@@ -1,9 +1,7 @@
 rmtrash 1.14
 ============
 
-Put files (and directories) in trash using the ```trash-put``` command in a way that is, otherwise as ```trash-put``` itself, compatible to GNUs ```rm``` and ```rmdir```.
-
-[Click here for more information about trash-cli.](https://github.com/andreafrancia/trash-cli)
+Put files (and directories) in trash using the ```trash-put``` command from [trash-cli](https://github.com/andreafrancia/trash-cli), in a way that (unlike ```trash-put``` itself) is compatible with GNU's ```rm``` and ```rmdir```.
 
 Installation
 ------------
@@ -23,7 +21,7 @@ to your ```~/.bashrc``` (or ```~/.bash_aliases```). Consider adding the ```--for
 Requirements
 ------------
 
-Obviously  ```trash-cli``` (to provide the ```trash-put``` or ```trash``` command) is required. ```rmtrash``` and ```rmdirtrash``` *should* work great with any distribution. If ```rmtrash``` or ```rmdirtrash``` doesn't work with your favourite distribution, please file a bug report. It was written to work with ```bash```.
+Obviously  [```trash-cli```](https://github.com/andreafrancia/trash-cli) (to provide the ```trash-put``` or ```trash``` command) is required. ```rmtrash``` and ```rmdirtrash``` *should* work great with any distribution. If ```rmtrash``` or ```rmdirtrash``` doesn't work with your favourite distribution, please file a bug report. It was written to work with ```bash```.
 
 **You wanna make ```rmtrash``` and ```rmdirtrash``` work with your favorite distribution or improve them in general?** Go on, I appreciate it!
 
@@ -34,7 +32,7 @@ Usage of rmtrash
 rmtrash [OPTION]... [FILE...]
 ```
 
-```rmtrash``` supports everything that GNUs ```rm``` does, that means it accepts the following options (see ```--help```):
+```rmtrash``` supports everything that GNU's ```rm``` does, that means it accepts the following options (see ```--help```):
 
 * Help options:
   * ```--help```: display help and exit
@@ -59,7 +57,7 @@ Usage of rmdirtrash
 rmdirtrash [OPTION]... [DIRECTORY...]
 ```
 
-```rmdirtrash``` supports everything that GNUs ```rmdir``` does, that means it accepts the following options (see ```--help```):
+```rmdirtrash``` supports everything that GNU's ```rmdir``` does, that means it accepts the following options (see ```--help```):
 * Help options:
   * ```--help```: display help and exit
   * ```--version```: output version information and exit
@@ -79,7 +77,7 @@ This option is not supposed to be used when calling ```rmtrash``` resp. ```rmdir
 Additional Notes
 ----------------
 
-For additional information see the ```trash-list``` (or ```list-trash```), ```trash-empty``` (or ```empty-trash```), ```trash-restore``` (or ```restore-trash```) and ```trash-rm``` commands provided by ```trash-cli``` ([Homepage](https://github.com/andreafrancia/trash-cli)) as well as the [FreeDesktop.org Trash Specification](http://www.ramendik.ru/docs/trashspec.html). Note ```trash-put --help``` (or ```trash --help```) and ```rm --help```, too.
+For additional information, see the ```trash-list``` (or ```list-trash```), ```trash-empty``` (or ```empty-trash```), ```trash-restore``` (or ```restore-trash```) and ```trash-rm``` commands provided by [```trash-cli```](https://github.com/andreafrancia/trash-cli), as well as the [FreeDesktop.org Trash Specification](http://www.ramendik.ru/docs/trashspec.html). Note ```trash-put --help``` (or ```trash --help```) and ```rm --help```, too.
 
 **A important note about execution time:**
 ```rmtrash``` is pretty slow! Because we're indexing all containing files before actually building the trash command (and because it's just a shell script), it is pretty slow when trashing many files. If you want to remove a very large directory (in terms of *many files*), consider using ```trash-put``` or ```rm``` directly. **Never** name ```rmtrash```s scriptfile ```rm``` - this will replace ```rm``` and is definitly not what you actually want! Use a bash alias as described above. The same applies to ```rmdirtrash```.
