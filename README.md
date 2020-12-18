@@ -1,7 +1,7 @@
 rmtrash 1.14
 ============
 
-Put files (and directories) in trash using the ```trash-put``` command from [trash-cli](https://github.com/andreafrancia/trash-cli), in a way that is (as ```trash-put``` itself) compatible to GNUs ```rm``` and ```rmdir```.
+Put files (and directories) in trash using the ```trash-put``` command from [trash-cli](https://github.com/andreafrancia/trash-cli), in a way that (unlike ```trash-put``` itself) is compatible with GNU's ```rm``` and ```rmdir```.
 
 Installation
 ------------
@@ -32,7 +32,7 @@ Usage of rmtrash
 rmtrash [OPTION]... [FILE...]
 ```
 
-```rmtrash``` supports everything that GNUs ```rm``` does, that means it accepts the following options (see ```--help```):
+```rmtrash``` supports everything that GNU's ```rm``` does, that means it accepts the following options (see ```--help```):
 
 * Help options:
   * ```--help```: display help and exit
@@ -57,7 +57,7 @@ Usage of rmdirtrash
 rmdirtrash [OPTION]... [DIRECTORY...]
 ```
 
-```rmdirtrash``` supports everything that GNUs ```rmdir``` does, that means it accepts the following options (see ```--help```):
+```rmdirtrash``` supports everything that GNU's ```rmdir``` does, that means it accepts the following options (see ```--help```):
 * Help options:
   * ```--help```: display help and exit
   * ```--version```: output version information and exit
