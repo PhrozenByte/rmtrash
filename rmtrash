@@ -588,6 +588,8 @@ if [ ! -h "$ARGUMENT" ] && [ ! -e "$ARGUMENT" ]; then
 	exit 256
 fi
 
+FILES=()
+
 # recursive mode
 if [ $RECURSIVE == true ]; then
 	# only delete on this filesystem
