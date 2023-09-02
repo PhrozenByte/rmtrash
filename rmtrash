@@ -65,7 +65,7 @@
 #
 #
 # COPYRIGHT AND LICENSING:
-#   Copyright (C) 2011-2020  Daniel Rudolf <https://www.daniel-rudolf.de/>
+#   Copyright (C) 2011-2023  Daniel Rudolf <https://www.daniel-rudolf.de/>
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -417,7 +417,7 @@ while true; do
 
 		"--version")
 			echo "rmtrash $VERSION (build $BUILD)"
-			echo "Copyright (C) 2011-2020 Daniel Rudolf"
+			echo "Copyright (C) 2011-2023 Daniel Rudolf"
 			echo "License GPLv3: GNU GPL version 3 only <http://gnu.org/licenses/gpl.html>."
 			echo "This is free software: you are free to change and redistribute it."
 			echo "There is NO WARRANTY, to the extent permitted by law."

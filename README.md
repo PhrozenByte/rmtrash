@@ -87,7 +87,7 @@ Typically you won't notice a time delay when using ```rmtrash``` and ```rmdirtra
 License & Copyright
 -------------------
 
-Copyright (C) 2011-2020  Daniel Rudolf <https://www.daniel-rudolf.de/>
+Copyright (C) 2011-2023  Daniel Rudolf <https://www.daniel-rudolf.de/>
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 3 of the License only.
 
