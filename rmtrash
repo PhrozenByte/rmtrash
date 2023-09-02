@@ -1,6 +1,6 @@
 #!/bin/bash
 # rmtrash - `rm` compatible layer for `trash`
-# Version 1.14 (build 20201127)
+# Version 1.15 (build 20230902)
 #
 #
 # SHORT DESCRIPTION:
@@ -147,12 +147,14 @@
 #       * fixing GitHub Issue #10
 #   v1.14 - 2020-11-27 16:02:00+0200
 #       / no changes
+#   v1.15 - 2023-09-02 10:57:00+0200
+#       * fixing GitHub Issue #18
 
 LC_ALL=C
 APP_NAME="$(basename "$0")"
 
-VERSION="1.14"
-BUILD="20201127"
+VERSION="1.15"
+BUILD="20230902"
 
 function showUsage() {
 	echo "Usage:"
